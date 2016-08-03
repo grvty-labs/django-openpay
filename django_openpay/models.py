@@ -4,6 +4,8 @@ from django.db.models.fields.related import ManyToManyField
 from . import openpay, hardcode, _ug
 
 
+# Obtained and edited from:
+# http://stackoverflow.com/questions/21925671/convert-django-model-object-to-dict-with-all-of-the-fields-intact
 def to_dict(instance):
     opts = instance._meta
     data = {}
