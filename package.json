@@ -1,0 +1,24 @@
+{
+  "name": "django-openpay",
+  "version": "0.0.2",
+  "description": "Django OpenPay core dependencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/letops/django-openpay.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/letops/django-openpay/issues"
+  },
+  "homepage": "https://github.com/letops/django-openpay#readme",
+  "devDependencies": {
+    "openpay": "^1.0.2",
+    "react": "^15.1.0",
+    "react-dom": "^15.1.0"
+  }
+}

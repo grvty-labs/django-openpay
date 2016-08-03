@@ -77,7 +77,7 @@ class Customer(models.Model):
         null=False,
         verbose_name=_ug('First Name'),
     )
-    last_name models.CharField(
+    last_name = models.CharField(
         max_length=60,
         blank=False,
         null=False,
@@ -94,7 +94,7 @@ class Customer(models.Model):
         null=False,
         verbose_name=_ug('Phone Number'),
     )
-    address = OneToOneField(
+    address = models.OneToOneField(
         Address,
         blank=False,
         null=False,
@@ -128,6 +128,31 @@ class Customer(models.Model):
             customer = openpay.Customer.retrieve(self.code)
             customer.delete()
         super(Customer, self).delete(*args, **kwargs)
+
+
+class Card(models.Model):
+    code = models.CharField(
+        max_length=100,
+        verbose_name=_ug('OpenPay Code')
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name=_ug('Card Name')
+    )
+    customer = models.ForeignKey(
+        Customer,
+        blank=False,
+        null=False,
+        verbose_name=_ug('Owner')
+    )
+
+    def delete(self, *args, **kwargs):
+        if self.code is not None:
+            card = openpay.Customer.retrieve(
+                self.customer.code).cards.retrieve(self.code)
+            if card:
+                card.delete()
+        super(Card, self).delete(*args, **kwargs)
 
 
 class Plan(models.Model):
@@ -217,3 +242,51 @@ class Plan(models.Model):
             plan = openpay.Plan.retrieve(self.code)
             plan.delete()
         super(Plan, self).delete(*args, **kwargs)
+
+
+class Suscription(models.Model):
+    code = models.CharField(
+        max_length=100,
+        verbose_name=_ug('OpenPay Code')
+    )
+    customer = models.ForeignKey(
+        Customer,
+        blank=False,
+        null=False,
+        verbose_name=_ug('Customer')
+    )
+    card = models.ForeignKey(
+        Card,
+        blank=False,
+        null=False,
+        verbose_name=_ug('Card')
+    )
+    plan = models.ForeignKey(
+        Plan,
+        blank=False,
+        null=False,
+        verbose_name=_ug('Plan')
+    )
+    cancel_at_end_period = models.BooleanField(
+        default=False,
+        blank=True,
+        null=False,
+        verbose_name=_ug('Cancel at the end of period')
+    )
+    trial_days = models.IntegerField(
+        default=0,
+        blank=True,
+        null=False,
+        verbose_name=_ug('Trial days')
+    )
+
+    def save(self, *args, **kwargs):
+        if self.code is not None:
+            suscription = openpay.Customer.retrive(
+                self.customer.code).suscriptions.retrieve(self.code)
+        else:
+            openpay.Customer.retrive(self.customer.code).suscriptions.create(
+                plan_id=self.plan.code,
+                trial_days=self.trial_days,
+                card_id=self.card.code,
+            )

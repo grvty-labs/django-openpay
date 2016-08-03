@@ -16,4 +16,4 @@ openpay.verify_ssl_certs = getattr(settings, 'OPENPAY_VERIFY_SSL', False)
 openpay.merchant_id = getattr(
     settings, 'OPENPAY_MERCHANT_ID', 'mzdtln0bmtms6o3kck8f'
 )
-openpay.production = getattr(settings, 'DEBUG', True)
+openpay.production = not getattr(settings, 'DEBUG', True)

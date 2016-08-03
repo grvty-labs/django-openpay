@@ -16,6 +16,19 @@ libraries:
 * The JavaScript library to manage online payouts and transactions, without
 saving sensible information in your django application.
 
+Installation
+------------
+
+To install this package from pip it is required to execute:
+
+´pip install django-openpay´
+
+To use the JSX files, you should have Webpack or Gulp installed to compile the
+JSX to ES5 or ES6. But due to my inexperience for including NPM dependencies
+in pip packages, you will require to install the openpay package:
+
+´npm install openpay´
+
 Disclaimer
 ---------
 

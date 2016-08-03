@@ -97,3 +97,4 @@ manage.py
 pip-selfcheck.json
 db.sqlite3
 media/
+node_modules/
