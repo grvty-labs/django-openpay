@@ -87,3 +87,13 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+
+bin/
+django_openpay_repo/
+include/
+lib/
+manage.py
+pip-selfcheck.json
+db.sqlite3
+media/
