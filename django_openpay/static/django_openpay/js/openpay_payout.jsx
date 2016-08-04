@@ -14,7 +14,7 @@ var OpenPayPayout = React.createClass({
     openpay = new OpenPay(
         this.props.merchantID,
         this.props.privateKey,
-        [ this.props.sandboxActive ],
+        [this.props.sandboxActive]
     );
   },
 

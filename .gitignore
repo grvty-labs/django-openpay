@@ -11,7 +11,6 @@ __pycache__/
 env/
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -91,10 +90,16 @@ ENV/
 
 bin/
 django_openpay_repo/
+dist/
+!dist/OpenPay*
+!django_openpay/dist
+!django_openpay/dist/
+!django_openpay/dist/*
 include/
 lib/
 manage.py
 pip-selfcheck.json
 db.sqlite3
 media/
+built/
 node_modules/
