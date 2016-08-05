@@ -307,17 +307,23 @@ class Subscription(models.Model):
     def save(self, *args, **kwargs):
         if self.code:
             subscription = openpay.Customer.retrive(
-                self.customer.code).subscriptions.retrieve(self.code)
-
-            # TODO: COMPLETE THIS
+                self.customer.code
+            ).subscriptions.retrieve(self.code)
+            subscription.plan_id = self.plan.code,
+            subscription.trial_days = self.trial_days,
+            subscription.card_id = self.card.code,
+            subscription.cancel_at_end_period = self.cancel_at_end_period
+            subscription.save()
         else:
             subscription = openpay.Customer.retrive(
-                self.customer.code).subscriptions.create(
+                self.customer.code
+            ).subscriptions.create(
                 plan_id=self.plan.code,
                 trial_days=self.trial_days,
                 card_id=self.card.code,
-                cancel_at_end_period=self.cancel_at_end_period,
             )
+            subscription.cancel_at_end_period = self.cancel_at_end_period
+            subscription.save()
             self.code = subscription.id
 
         super(Subscription, self).save(*args, **kwargs)

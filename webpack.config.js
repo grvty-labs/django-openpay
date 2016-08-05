@@ -13,20 +13,21 @@ var PROD = (process.env.DJANGO_ENV === 'production');
 console.log('PRODUCTION: ' + PROD);
 
 var entries = {
-  OpenPay_Card_Create: './django_openpay/static/django_openpay/js/openpay_card_creation.jsx',
-  OpenPay_Payout: './django_openpay/static/django_openpay/js/openpay_payout.jsx',
+  // OpenPay_Card_Create: './django_openpay/static/django_openpay/js/openpay_card_creation.jsx',
+  // OpenPay_Payout: './django_openpay/static/django_openpay/js/openpay_payout.jsx',
+  Testing: './django_openpay/static/django_openpay/testing.jsx',
 };
 
 var outputDir = PROD
-  ? path.join(__dirname, 'django_openpay', 'static', 'django_openpay', 'dist')
-  : path.join(__dirname, 'built', 'bundles');
+  ? path.join(__dirname, 'webpack', 'prod')
+  : path.join(__dirname, 'webpack', 'dev');
 
 function setCssExt(ext) {
   return ext.replace(/\.js$/, '.css');
 };
 
-var cleanPlugin = new CleanWebpackPlugin(['bundles'], {
-  root: path.resolve('./built'),
+var cleanPlugin = new CleanWebpackPlugin(['dev'], {
+  root: path.resolve('./webpack'),
   verbose: true,
   dry: false,
 });
@@ -104,13 +105,14 @@ var webpackConfiguration = {
     generateManifestPlugin,
     new BundleTracker({
       filename: PROD
-        ? './django_openpay/static/django_openpay/django_openpay_dist.json'
-        : './built/django_openpay_dev.json',
+        ? './webpack/django_openpay_prod.json'
+        : './webpack/django_openpay_dev.json',
     }),
   ],
 
   externals: {
     openpay: 'OpenPay',
+    jquery: 'jQuery',
   },
 
   module: {
@@ -149,9 +151,9 @@ var webpackConfiguration = {
 };
 
 if (PROD) {
-  cleanPlugin.paths = ['production'];
+  cleanPlugin.paths = ['prod'];
   cleanPlugin.options = {
-    root: path.resolve('./django_openpay/static/django_openpay/dist'),
+    root: path.resolve('./webpack'),
     verbose: true,
     dry: false,
   };

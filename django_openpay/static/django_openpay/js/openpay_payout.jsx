@@ -1,27 +1,24 @@
 var React = require('react');
 var PropTypes = React.PropTypes;
-var OpenPayREQ = require('openpay');
-var openpay = null;
+var openpay = require('openpay');
 
 var OpenPayPayout = React.createClass({
   propTypes: {
     merchantID: PropTypes.string.isRequired,
-    privateKey: PropTypes.string.isRequired,
+    publicKey: PropTypes.string.isRequired,
     sandboxActive: PropTypes.bool.isRequired,
   },
 
   componentWillMount: function () {
-    openpay = new OpenPay(
-        this.props.merchantID,
-        this.props.privateKey,
-        [this.props.sandboxActive]
-    );
+    openpay.setId(this.props.merchantID);
+    openpay.setApiKey(this.props.publicKey);
+    openpay.setSandboxMode(this.props.sandboxActive);
   },
 
   render: function () {
     return (
-      <div className='openpay'>
-        <input type='hidden' name='token_id' id='token_id'></input>
+      <div className='openpay payout'>
+        <input type='hidden' name='token_id' id='token_id'/>
 
         <legend>Forma de Pago</legend>
 

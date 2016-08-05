@@ -3,5 +3,6 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r'^cards/save/$', views.card_save, name='django_openpay_cardsave'),
+    url(r'^cards/save/$', views.cardSave,
+        name='django_openpay_cardsave'),
 ]

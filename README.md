@@ -56,9 +56,11 @@ the Node package to be used directly from front-end.
 
 To use the JSX file, be sure to include in your HTML head:
 
-`<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay.v1.min.js'\>`
+`  <script type='text/javascript' src='https://code.jquery.com/jquery-3.1.0.min.js'></script>`
 
-`<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay-data.v1.min.js'\>`
+`<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay.v1.min.js'></script>`
+
+`<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay-data.v1.min.js'></script>`
 
 Disclaimer
 ---------

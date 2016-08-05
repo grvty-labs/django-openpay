@@ -31,5 +31,8 @@
     "resolve-url-loader": "^1.6.0",
     "webpack": "^1.13.1",
     "webpack-bundle-tracker": "0.0.93"
+  },
+  "dependencies": {
+    "axios": "^0.13.1"
   }
 }
