@@ -8,6 +8,7 @@ var OpenPayCardCreate = React.createClass({
   propTypes: {
     merchantID: PropTypes.string.isRequired,
     publicKey: PropTypes.string.isRequired,
+    customerID: PropTypes.string.isRequired,
     sandboxActive: PropTypes.bool.isRequired,
   },
 
@@ -150,11 +151,12 @@ var OpenPayCardCreate = React.createClass({
 
           type: 'POST',
           url: CONST_DJANGO_CARD_SAVE,
-          contentType: 'application/json',
+          contentType: 'application/json; charset=utf-8',
           dataType: 'text',
           data: JSON.stringify({
             token: response.data.id,
             deviceId: deviceId,
+            customerId: this.props.customerID,
           }),
 
           success: function (result) {

@@ -62,6 +62,12 @@ To use the JSX file, be sure to include in your HTML head:
 
 `<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay-data.v1.min.js'></script>`
 
+TODOs
+-----
+
+*   Verify this package is PCI Compliant
+
+
 Disclaimer
 ---------
 

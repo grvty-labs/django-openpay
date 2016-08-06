@@ -1,5 +1,8 @@
 from django.db import models
 from django.db.models.fields.related import ManyToManyField
+from django.utils.dateparse import parse_datetime, parse_date
+
+from decimal import Decimal
 
 from . import openpay, hardcode, _ug
 
@@ -118,6 +121,19 @@ class Customer(models.Model):
         related_name='customer',
         verbose_name=_ug('Address')
     )
+    creation_date = models.DateTimeField(
+        blank=False,
+        null=False,
+        verbose_name=_ug('Creation date')
+    )
+
+    def retrieve(self):
+        customer = openpay.Customer.retrieve(self.code)
+        self.first_name = customer.name
+        self.last_name = customer.last_name
+        self.email = customer.email
+        self.phone_number = customer.phone_number
+        self.creation_date = parse_datetime(customer.creation_date)
 
     def save(self, *args, **kwargs):
         if self.code:
@@ -129,7 +145,6 @@ class Customer(models.Model):
             customer.address = self.address.to_idless_dict()
             customer.save()
         else:
-            print(self.address.to_idless_dict())
             customer = openpay.Customer.create(
                 name=self.first_name,
                 last_name=self.last_name,
@@ -139,6 +154,7 @@ class Customer(models.Model):
             )
             self.code = customer.id
 
+        self.retrieve()
         super(Customer, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -147,17 +163,54 @@ class Customer(models.Model):
             customer.delete()
         super(Customer, self).delete(*args, **kwargs)
 
+    def __str__(self):
+        return '{first_name} {last_name}'.format(
+            first_name=self.first_name,
+            last_name=self.last_name)
+
 
 class Card(models.Model):
     code = models.CharField(
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('OpenPay Code')
+        verbose_name=_ug('OpenPay code')
     )
-    name = models.CharField(
+    alias = models.CharField(
         max_length=100,
-        verbose_name=_ug('Card Name')
+        blank=True,
+        null=False,
+        verbose_name=_ug('Alias')
+    )
+    card_type = models.CharField(
+        max_length=15,
+        blank=False,
+        null=False,
+        verbose_name=_ug('Card type')
+    )
+    holder = models.CharField(
+        max_length=100,
+        blank=True,
+        null=False,
+        verbose_name=_ug('Holder name')
+    )
+    number = models.CharField(
+        max_length=5,
+        blank=False,
+        null=False,
+        verbose_name=_ug('Number')
+    )
+    month = models.CharField(
+        max_length=3,
+        blank=True,
+        null=False,
+        verbose_name=_ug('Expiration month')
+    )
+    year = models.CharField(
+        max_length=3,
+        blank=True,
+        null=False,
+        verbose_name=_ug('Expiration year')
     )
     customer = models.ForeignKey(
         Customer,
@@ -166,6 +219,50 @@ class Card(models.Model):
         related_name='cards',
         verbose_name=_ug('Owner')
     )
+    creation_date = models.DateTimeField(
+        blank=False,
+        null=False,
+        verbose_name=_ug('Creation date')
+    )
+
+    @classmethod
+    def tokenized_create(cls, customerId, tokenId, deviceId, alias=''):
+        card = openpay.Card.create(customer=customerId, token_id=tokenId,
+                                   device_session_id=deviceId)
+        if card.id:
+            customer = Customer.objects.get(code=customerId)
+            card = cls(
+                code=card.id,
+                alias=alias,
+                card_type=card.type,
+                holder=card.holder_name,
+                number=card.card_number[-4:],
+                month=card.expiration_month[-2:],
+                year=card.expiration_year[-2:],
+                creation_date=parse_datetime(card.creation_date),
+                customer=customer,
+                recovered=True
+            )
+            return card.save()
+
+    def retrieve(self):
+        card = openpay.Customer.retrieve(
+            self.customer.code
+        ).cards.retrieve(
+            self.code
+        )
+        self.recovered = True
+        self.card_type = card.type
+        self.holder = card.holder_name
+        self.number = card.card_number[-4:]
+        self.month = card.expiration_month[-2:]
+        self.year = card.expiration_year[-2:]
+        self.creation_date = parse_datetime(card.creation_date)
+
+    def save(self, *args, **kwargs):
+        if self.code:
+            self.retrieve()
+        super(Card, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         if self.code:
@@ -174,6 +271,13 @@ class Card(models.Model):
             if card:
                 card.delete()
         super(Card, self).delete(*args, **kwargs)
+
+    def __str__(self):
+        if self.alias:
+            return '{code} | {customer} | {alias}'.format(
+                code=self.code, customer=self.customer, alias=self.alias)
+        return '{code} | {customer}'.format(
+            code=self.code, customer=self.customer)
 
 
 class Plan(models.Model):
@@ -230,12 +334,28 @@ class Plan(models.Model):
         null=False,
         verbose_name=_ug('Frecuency Unit')
     )
+    creation_date = models.DateTimeField(
+        blank=False,
+        null=False,
+        verbose_name=_ug('Creation date')
+    )
+
+    def retrieve(self):
+        plan = openpay.Plan.retrieve(self.code)
+        self.name = plan.name
+        self.amount = Decimal(plan.amount)
+        self.status_after_retry = plan.status_after_retry
+        self.retry_times = plan.retry_times
+        self.repeat_unit = plan.repeat_unit
+        self.trial_days = plan.trial_days
+        self.repeat_every = plan.repeat_every
+        self.creation_date = parse_datetime(plan.creation_date)
 
     def save(self, *args, **kwargs):
         if self.code:
             plan = openpay.Plan.retrieve(self.code)
             plan.name = self.name
-            plan.amount = self.amount
+            plan.amount = str(self.amount)
             plan.status_after_retry = self.status_after_retry
             plan.retry_times = self.retry_times
             plan.repeat_unit = self.repeat_unit
@@ -245,7 +365,7 @@ class Plan(models.Model):
         else:
             plan = openpay.Plan.create(
                 name=self.name,
-                amount=self.amount,
+                amount=str(self.amount),
                 status_after_retry=self.status_after_retry,
                 retry_times=self.retry_times,
                 repeat_unit=self.repeat_unit,
@@ -254,6 +374,8 @@ class Plan(models.Model):
             )
             self.code = plan.id
 
+        self.retrieve()
+
         super(Plan, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -261,6 +383,9 @@ class Plan(models.Model):
             plan = openpay.Plan.retrieve(self.code)
             plan.delete()
         super(Plan, self).delete(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 
 class Subscription(models.Model):
@@ -291,41 +416,56 @@ class Subscription(models.Model):
         related_name='subscriptions',
         verbose_name=_ug('Plan')
     )
-    cancel_at_end_period = models.BooleanField(
+    cancel_at_period_end = models.BooleanField(
         default=False,
         blank=True,
         null=False,
         verbose_name=_ug('Cancel at the end of period')
     )
-    trial_days = models.IntegerField(
-        default=0,
+    trial_end_date = models.DateField(
         blank=True,
-        null=False,
+        null=True,
         verbose_name=_ug('Trial days')
     )
+    creation_date = models.DateTimeField(
+        blank=False,
+        null=False,
+        verbose_name=_ug('Creation date')
+    )
+
+    def retrieve(self):
+        subscription = openpay.Customer.retrieve(
+            self.customer.code
+        ).subscriptions.retrieve(self.code)
+        self.trial_end_date = parse_date(subscription.trial_end_date)
+        self.cancel_at_period_end = subscription.cancel_at_period_end
+        self.creation_date = parse_datetime(subscription.creation_date)
 
     def save(self, *args, **kwargs):
         if self.code:
-            subscription = openpay.Customer.retrive(
+            subscription = openpay.Customer.retrieve(
                 self.customer.code
             ).subscriptions.retrieve(self.code)
-            subscription.plan_id = self.plan.code,
-            subscription.trial_days = self.trial_days,
-            subscription.card_id = self.card.code,
-            subscription.cancel_at_end_period = self.cancel_at_end_period
+            subscription.plan_id = self.plan.code
+            subscription.trial_end_date = self.trial_end_date.isoformat()
+            subscription.card = None
+            subscription.card_id = self.card.code
+            subscription.cancel_at_period_end = self.cancel_at_period_end
             subscription.save()
         else:
-            subscription = openpay.Customer.retrive(
+            subscription = openpay.Customer.retrieve(
                 self.customer.code
             ).subscriptions.create(
                 plan_id=self.plan.code,
-                trial_days=self.trial_days,
+                trial_end_date=self.trial_end_date.isoformat()
+                if self.trial_end_date else None,
                 card_id=self.card.code,
             )
-            subscription.cancel_at_end_period = self.cancel_at_end_period
+            subscription.cancel_at_period_end = self.cancel_at_period_end
             subscription.save()
             self.code = subscription.id
 
+        self.retrieve()
         super(Subscription, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -335,6 +475,11 @@ class Subscription(models.Model):
             subscription.delete()
         super(Subscription, self).delete(*args, **kwargs)
 
+    def __str__(self):
+        return '{plan} | {customer}'.format(
+            customer=self.customer,
+            plan=self.plan)
+
 
 class Charge(models.Model):
     code = models.CharField(
@@ -343,6 +488,27 @@ class Charge(models.Model):
         null=False,
         verbose_name=_ug('OpenPay Code')
     )
+    description = models.TextField(
+        blank=True,
+        null=False,
+        verbose_name=_ug('Description')
+    )
+    amount = models.DecimalField(
+        decimal_places=2,
+        max_digits=20,
+        blank=False,
+        null=False,
+        verbose_name=_ug('Amount')
+    )
+    method = models.CharField(
+        max_length=30,
+        blank=True,
+        null=False,
+        verbose_name=_ug('Method')
+    )
+    # status
+    # refund
+    # currency
     customer = models.ForeignKey(
         Customer,
         blank=False,
@@ -360,4 +526,9 @@ class Charge(models.Model):
         blank=False,
         null=False,
         verbose_name=_ug('Plan')
+    )
+    creation_date = models.DateTimeField(
+        blank=False,
+        null=False,
+        verbose_name=_ug('Creation date')
     )

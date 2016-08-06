@@ -51,6 +51,7 @@
 	ReactDOM.render(React.createElement(OpenPayCardCreate, {
 	  merchantID: CONST_OPENPAY_MERCHANT_ID,
 	  publicKey: CONST_OPENPAY_PUBLIC_API_KEY,
+	  customerID: CONST_OPENPAY_CUSTOMER_ID,
 	  sandboxActive: CONST_OPENPAY_SANDBOX
 	}), document.getElementById('test_me'));
 
@@ -21375,6 +21376,7 @@
 	  propTypes: {
 	    merchantID: PropTypes.string.isRequired,
 	    publicKey: PropTypes.string.isRequired,
+	    customerID: PropTypes.string.isRequired,
 	    sandboxActive: PropTypes.bool.isRequired
 	  },
 	
@@ -21514,11 +21516,12 @@
 	
 	        type: 'POST',
 	        url: CONST_DJANGO_CARD_SAVE,
-	        contentType: 'application/json',
+	        contentType: 'application/json; charset=utf-8',
 	        dataType: 'text',
 	        data: JSON.stringify({
 	          token: response.data.id,
-	          deviceId: deviceId
+	          deviceId: deviceId,
+	          customerId: this.props.customerID
 	        }),
 	
 	        success: function (result) {
@@ -21849,4 +21852,4 @@
 
 /***/ }
 /******/ ]);
-//# sourceMappingURL=Testing-3453d5025a55c2e39f0f.js.map
+//# sourceMappingURL=Testing-c9b7f9ae2d6156948ba9.js.map
