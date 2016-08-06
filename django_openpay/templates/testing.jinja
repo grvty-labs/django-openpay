@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8'>
+    <title>System Test</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta name='description' content="Word?! Shit you care about but probably shouldn't.">
+    <meta name='author' content='GRVTY labs, duh!'>
+
+    <script type='text/javascript' src='https://code.jquery.com/jquery-3.1.0.min.js' integrity='sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=' crossorigin='anonymous'></script>
+    <script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay.v1.min.js'></script>
+    <script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay-data.v1.min.js'></script>
+  </head>
+  <body>
+    <div id='test_me'></div>
+
+    <script type='text/javascript'>
+      var CONST_OPENPAY_PUBLIC_API_KEY = '{{ OPENPAY_PUBLIC_API_KEY }}';
+      var CONST_OPENPAY_MERCHANT_ID = '{{ OPENPAY_MERCHANT_ID }}';
+      var CONST_OPENPAY_CUSTOMER_ID = 'at49aa1eccjhrhpecfkb';
+      var CONST_OPENPAY_SANDBOX = true ;
+
+      var CONST_DJANGO_CARD_SAVE = '{{ url("django_openpay_cardsave") }}' ;
+    </script>
+    {{ render_bundle('Testing') }}
+  </body>
+</html>
