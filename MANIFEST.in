@@ -1,5 +1,3 @@
 include README.md
 include LICENSE
 recursive-include django_openpay *
-recursive-include django_openpay/static *
-recursive-include django_openpay/templates *
