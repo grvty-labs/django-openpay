@@ -66,7 +66,11 @@ TODOs
 -----
 
 *   Verify this package is PCI Compliant
-
+*   Webhooks to display Charges
+*   Bank Accounts
+*   Transferences
+*   Fees
+*   Payouts
 
 Disclaimer
 ---------
