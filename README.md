@@ -83,4 +83,9 @@ and allows to modify the information contained inside OpenPay from Django.
 not have an SSL certificate preconfiguration, this is the reason behind our
 decision to create cards only from front-end.
 
-GRVTYlabs 2016
+Owned and developed by
+--------
+
+[![GRVTYlabs][logo]](www.grvtylabs.com)
+
+[logo]: https://github.com/letops/django-openpay/blob/master/logo.png?raw=true "GRVTYlabs"
