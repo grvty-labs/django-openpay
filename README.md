@@ -1,5 +1,5 @@
-django-openpay
-==============
+**django-openpay**
+==================
 
 Django app for online transactions
 ----------------------------------
@@ -86,6 +86,10 @@ decision to create cards only from front-end.
 Owned and developed by
 --------
 
+[![StackShare][stack-shield]][stack-tech]
+
 [![GRVTYlabs][logo]](www.grvtylabs.com)
 
-[logo]: https://github.com/letops/django-openpay/blob/master/logo.png?raw=true "GRVTYlabs"
+[logo]: https://github.com/grvty-labs/django-openpay/blob/master/logo.png?raw=true "GRVTYlabs"
+[stack-shield]: http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat
+[stack-tech]: http://stackshare.io/letops/grvtylabs
