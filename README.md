@@ -14,7 +14,7 @@ libraries:
 *   The Python to manage Plans and Customers directly from django models
 
 *   The JavaScript library to manage online payouts and transactions, without
-saving sensible information in your django application.
+saving sensitive information in your django application.
 
 Features
 --------
@@ -61,6 +61,18 @@ To use the JSX file, be sure to include in your HTML head:
 `<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay.v1.min.js'></script>`
 
 `<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay-data.v1.min.js'></script>`
+
+This package requires to have knowledge of your Openpay's public, private and
+merchant keys. To do this you just have to put your keys inside the
+`settings.py` file of your Django project using the following variables:
+
+   -`OPENPAY_PRIVATE_API_KEY`
+
+   -`OPENPAY_PUBLIC_API_KEY`
+
+   -`OPENPAY_MERCHANT_ID`
+
+   -`OPENPAY_VERIFY_SSL`
 
 TODOs
 -----

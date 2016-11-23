@@ -11,10 +11,10 @@ default_app_config = 'django_openpay.apps.DjangoOpenpayConfig'
 # OPENPAY_VERIFY_SSL
 
 openpay.api_key = getattr(
-    settings, 'OPENPAY_PRIVATE_API_KEY', 'pk_f0660ad5a39f4912872e24a7a660370c'
+    settings, 'OPENPAY_PRIVATE_API_KEY', None
 )
 openpay.verify_ssl_certs = getattr(settings, 'OPENPAY_VERIFY_SSL', False)
 openpay.merchant_id = getattr(
-    settings, 'OPENPAY_MERCHANT_ID', 'mzdtln0bmtms6o3kck8f'
+    settings, 'OPENPAY_MERCHANT_ID', None
 )
 openpay.production = not getattr(settings, 'DEBUG', True)
