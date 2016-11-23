@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext as _ug
+from django.utils.translation import ugettext, ugettext_lazy
 from django.conf import settings
 
 import openpay

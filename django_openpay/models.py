@@ -4,60 +4,42 @@ from django.utils.dateparse import parse_datetime, parse_date
 
 from decimal import Decimal
 
-from . import openpay, hardcode, _ug
-
-
-# Obtained and edited from:
-# http://stackoverflow.com/questions/21925671/convert-django-model-object-to-dict-with-all-of-the-fields-intact
-def to_dict(instance):
-    opts = instance._meta
-    data = {}
-    for f in opts.concrete_fields + opts.many_to_many:
-        if isinstance(f, ManyToManyField):
-            if instance.pk is None:
-                data[f.name] = []
-            else:
-                data[f.name] = list(
-                    f.value_from_object(instance).values_list('pk', flat=True)
-                )
-        else:
-            data[f.name] = f.value_from_object(instance)
-    return data
+from . import openpay, hardcode, ugettext_lazy
 
 
 class Address(models.Model):
     city = models.TextField(
         blank=False,
         null=False,
-        verbose_name=_ug('City')
+        verbose_name=ugettext_lazy('City')
     )
     state = models.TextField(
         blank=False,
         null=False,
-        verbose_name=_ug('State')
+        verbose_name=ugettext_lazy('State')
     )
     line1 = models.CharField(
         max_length=100,
         blank=False,
         null=False,
-        verbose_name=_ug('Street (Line 1)'),
+        verbose_name=ugettext_lazy('Street (Line 1)'),
     )
     line2 = models.CharField(
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('Street (Line 2)'),
+        verbose_name=ugettext_lazy('Street (Line 2)'),
     )
     line3 = models.CharField(
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('Street (Line 3)'),
+        verbose_name=ugettext_lazy('Street (Line 3)'),
     )
     postal_code = models.IntegerField(
         blank=False,
         null=False,
-        verbose_name=_ug('Postal Code')
+        verbose_name=ugettext_lazy('Postal Code')
     )
     country_code = models.CharField(
         choices=hardcode.address_countrycodes,
@@ -65,9 +47,11 @@ class Address(models.Model):
         max_length=5,
         blank=True,
         null=False,
-        verbose_name=_ug('Country')
+        verbose_name=ugettext_lazy('Country')
     )
 
+    # Obtained and edited from:
+    # https://goo.gl/SqkLbo
     def to_idless_dict(self):
         opts = self._meta
         data = {}
@@ -89,42 +73,42 @@ class Customer(models.Model):
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('OpenPay Code')
+        verbose_name=ugettext_lazy('OpenPay Code')
     )
     first_name = models.CharField(
         max_length=60,
         blank=False,
         null=False,
-        verbose_name=_ug('First Name'),
+        verbose_name=ugettext_lazy('First Name'),
     )
     last_name = models.CharField(
         max_length=60,
         blank=False,
         null=False,
-        verbose_name=_ug('Last Name'),
+        verbose_name=ugettext_lazy('Last Name'),
     )
     email = models.EmailField(
         blank=False,
         null=False,
-        verbose_name=_ug('Email'),
+        verbose_name=ugettext_lazy('Email'),
     )
     phone_number = models.CharField(
         max_length=20,
         blank=False,
         null=False,
-        verbose_name=_ug('Phone Number'),
+        verbose_name=ugettext_lazy('Phone Number'),
     )
     address = models.OneToOneField(
         Address,
         blank=False,
         null=False,
         related_name='customer',
-        verbose_name=_ug('Address')
+        verbose_name=ugettext_lazy('Address')
     )
     creation_date = models.DateTimeField(
         blank=False,
         null=False,
-        verbose_name=_ug('Creation date')
+        verbose_name=ugettext_lazy('Creation date')
     )
 
     def retrieve(self):
@@ -174,55 +158,55 @@ class Card(models.Model):
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('OpenPay code')
+        verbose_name=ugettext_lazy('OpenPay code')
     )
     alias = models.CharField(
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('Alias')
+        verbose_name=ugettext_lazy('Alias')
     )
     card_type = models.CharField(
         max_length=15,
         blank=False,
         null=False,
-        verbose_name=_ug('Card type')
+        verbose_name=ugettext_lazy('Card type')
     )
     holder = models.CharField(
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('Holder name')
+        verbose_name=ugettext_lazy('Holder name')
     )
     number = models.CharField(
         max_length=5,
         blank=False,
         null=False,
-        verbose_name=_ug('Number')
+        verbose_name=ugettext_lazy('Number')
     )
     month = models.CharField(
         max_length=3,
         blank=True,
         null=False,
-        verbose_name=_ug('Expiration month')
+        verbose_name=ugettext_lazy('Expiration month')
     )
     year = models.CharField(
         max_length=3,
         blank=True,
         null=False,
-        verbose_name=_ug('Expiration year')
+        verbose_name=ugettext_lazy('Expiration year')
     )
     customer = models.ForeignKey(
         Customer,
         blank=False,
         null=False,
         related_name='cards',
-        verbose_name=_ug('Owner')
+        verbose_name=ugettext_lazy('Owner')
     )
     creation_date = models.DateTimeField(
         blank=False,
         null=False,
-        verbose_name=_ug('Creation date')
+        verbose_name=ugettext_lazy('Creation date')
     )
 
     @classmethod
@@ -285,26 +269,26 @@ class Plan(models.Model):
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('OpenPay Code')
+        verbose_name=ugettext_lazy('OpenPay Code')
     )
     name = models.CharField(
         max_length=60,
         blank=False,
         null=False,
-        verbose_name=_ug('Name'),
+        verbose_name=ugettext_lazy('Name'),
     )
     amount = models.DecimalField(
         decimal_places=2,
         max_digits=20,
         blank=False,
         null=False,
-        verbose_name=_ug('Amount')
+        verbose_name=ugettext_lazy('Amount')
     )
     retry_times = models.IntegerField(
         default=3,
         blank=True,
         null=False,
-        verbose_name=_ug('Number of retries')
+        verbose_name=ugettext_lazy('Number of retries')
     )
     status_after_retry = models.CharField(
         choices=hardcode.plan_statusafter,
@@ -312,19 +296,19 @@ class Plan(models.Model):
         max_length=15,
         blank=True,
         null=False,
-        verbose_name=_ug('When retries are exhausted')
+        verbose_name=ugettext_lazy('When retries are exhausted')
     )
     trial_days = models.IntegerField(
         default=0,
         blank=True,
         null=False,
-        verbose_name=_ug('Trial days')
+        verbose_name=ugettext_lazy('Trial days')
     )
     repeat_every = models.IntegerField(
         default=1,
         blank=True,
         null=False,
-        verbose_name=_ug('Frecuency Number')
+        verbose_name=ugettext_lazy('Frecuency Number')
     )
     repeat_unit = models.CharField(
         choices=hardcode.plan_repeatunit,
@@ -332,12 +316,12 @@ class Plan(models.Model):
         max_length=15,
         blank=True,
         null=False,
-        verbose_name=_ug('Frecuency Unit')
+        verbose_name=ugettext_lazy('Frecuency Unit')
     )
     creation_date = models.DateTimeField(
         blank=False,
         null=False,
-        verbose_name=_ug('Creation date')
+        verbose_name=ugettext_lazy('Creation date')
     )
 
     def retrieve(self):
@@ -393,44 +377,44 @@ class Subscription(models.Model):
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('OpenPay Code')
+        verbose_name=ugettext_lazy('OpenPay Code')
     )
     customer = models.ForeignKey(
         Customer,
         blank=False,
         null=False,
         related_name='subscriptions',
-        verbose_name=_ug('Customer')
+        verbose_name=ugettext_lazy('Customer')
     )
     card = models.ForeignKey(
         Card,
         blank=False,
         null=False,
         related_name='subscriptions',
-        verbose_name=_ug('Card')
+        verbose_name=ugettext_lazy('Card')
     )
     plan = models.ForeignKey(
         Plan,
         blank=False,
         null=False,
         related_name='subscriptions',
-        verbose_name=_ug('Plan')
+        verbose_name=ugettext_lazy('Plan')
     )
     cancel_at_period_end = models.BooleanField(
         default=False,
         blank=True,
         null=False,
-        verbose_name=_ug('Cancel at the end of period')
+        verbose_name=ugettext_lazy('Cancel at the end of period')
     )
     trial_end_date = models.DateField(
         blank=True,
         null=True,
-        verbose_name=_ug('Trial days')
+        verbose_name=ugettext_lazy('Trial days')
     )
     creation_date = models.DateTimeField(
         blank=False,
         null=False,
-        verbose_name=_ug('Creation date')
+        verbose_name=ugettext_lazy('Creation date')
     )
 
     def retrieve(self):
@@ -486,25 +470,25 @@ class Charge(models.Model):
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=_ug('OpenPay Code')
+        verbose_name=ugettext_lazy('OpenPay Code')
     )
     description = models.TextField(
         blank=True,
         null=False,
-        verbose_name=_ug('Description')
+        verbose_name=ugettext_lazy('Description')
     )
     amount = models.DecimalField(
         decimal_places=2,
         max_digits=20,
         blank=False,
         null=False,
-        verbose_name=_ug('Amount')
+        verbose_name=ugettext_lazy('Amount')
     )
     method = models.CharField(
         max_length=30,
         blank=True,
         null=False,
-        verbose_name=_ug('Method')
+        verbose_name=ugettext_lazy('Method')
     )
     # status
     # refund
@@ -513,22 +497,22 @@ class Charge(models.Model):
         Customer,
         blank=False,
         null=False,
-        verbose_name=_ug('Customer')
+        verbose_name=ugettext_lazy('Customer')
     )
     card = models.ForeignKey(
         Card,
         blank=False,
         null=False,
-        verbose_name=_ug('Card')
+        verbose_name=ugettext_lazy('Card')
     )
     plan = models.ForeignKey(
         Plan,
         blank=False,
         null=False,
-        verbose_name=_ug('Plan')
+        verbose_name=ugettext_lazy('Plan')
     )
     creation_date = models.DateTimeField(
         blank=False,
         null=False,
-        verbose_name=_ug('Creation date')
+        verbose_name=ugettext_lazy('Creation date')
     )

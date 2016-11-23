@@ -1,7 +1,7 @@
 from django.apps import AppConfig
-from django.utils.translation import ugettext_lazy as _
+from . import ugettext_lazy
 
 
 class DjangoOpenpayConfig(AppConfig):
     name = 'django_openpay'
-    verbose_name = _('Django OpenPay')
+    verbose_name = ugettext_lazy('Django OpenPay')
