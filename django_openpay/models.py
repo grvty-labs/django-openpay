@@ -622,14 +622,24 @@ class Charge(models.Model):
         verbose_name=ugettext_lazy('Amount')
     )
     method = models.CharField(
-        max_length=30,
+        default=hardcode.charge_method_card,
+        choices=hardcode.charge_method,
+        max_length=15,
         blank=True,
         null=False,
         verbose_name=ugettext_lazy('Method')
     )
     # status
     # refund
-    # currency
+    currency = models.CharField(
+        default=hardcode.charge_currency_mxn,
+        choices=hardcode.charge_currency,
+        max_length=8,
+        blank=True,
+        null=False,
+        verbose_name=ugettext_lazy('Currency')
+    )
+
     customer = models.ForeignKey(
         Customer,
         blank=False,
@@ -660,14 +670,71 @@ class Charge(models.Model):
             return ['code', 'description', 'amount', 'method', 'customer',
                     'card', 'plan', 'creation_date']
         return ['code', 'creation_date']
+
+    def capture(self):
+        if self.code and self.method == hardcode.charge_method_card:
+            if not hasattr(self, '_openpay_obj'):
+                self.retrieve()
+            self._openpay_obj.capture()
+
+        else:
+            raise exceptions.OpenpayObjectDoesNotExist
+
+    def refund(self):
+        if self.code and self.method == hardcode.charge_method_card:
+            if not hasattr(self, '_openpay_obj'):
+                self.retrieve()
+            self._openpay_obj.refund()
+            self.refund = True
+            self.save()
+
     def push(self):
-        raise NotImplementedError
+        if not self.code:
+            if not self.customer or not self.customer.code:
+                raise exceptions.OpenpayNoCustomer
+            if not self.card or not self.card.code:
+                raise exceptions.OpenpayNoCard
+            self._openpay_obj = openpay.Customer.retrieve(
+                self.customer.code
+            ).charges.create(
+                source_id=self.card.code,
+                method=self.method,
+                amount=str(self.amount),
+                currency=self.currency,
+                description=self.description,
+                device_session_id='sdfghjqwertyu',  # FIXME: This is not acceptable
+                capture=False,
+            )
+            self.code = self._openpay_obj.id
+            self.pull()
 
     def pull(self):
-        raise NotImplementedError
+        # TODO: Pull Customer and Card
+        self.retrieve()
+        self.description = self._openpay_obj.description
+        self.amount = Decimal(self._openpay_obj.amount)
+        self.method = self._openpay_obj.method
+        self.currency = self._openpay_obj.currency
+        self.creation_date = parse_datetime(
+            self._openpay_obj.creation_date)
 
     def retrieve(self):
-        raise NotImplementedError
+        if not self.customer or not self.customer.code:
+            raise exceptions.OpenpayNoCustomer
+
+        if self.code:
+            self._openpay_obj = openpay.Customer.retrieve(
+                self.customer.code
+            ).charges.retrieve(self.code)
+
+        else:
+            raise exceptions.OpenpayObjectDoesNotExist
 
     def remove(self):
         raise NotImplementedError
+
+
+@receiver(pre_save, sender=Charge)
+def charge_presave(sender, instance=None, **kwargs):
+    instance.full_clean()
+    instance.push()

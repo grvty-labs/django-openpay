@@ -268,3 +268,18 @@ plan_repeatunit = (
     (plan_repeatunit_month, ugettext_lazy('Month')),
     (plan_repeatunit_year, ugettext_lazy('Year')),
 )
+
+charge_method_card = 'card'
+charge_method_store = 'store'
+charge_method_bank = 'bank_account'
+charge_method = (
+    (charge_method_card, ugettext_lazy('Card')),
+    # (charge_method_store, ugettext_lazy('Store')),
+    # (charge_method_bank, ugettext_lazy('Bank Account')),
+)
+charge_currency_mxn = 'MXN'
+charge_currency_usd = 'USD'
+charge_currency = (
+    (charge_currency_mxn, ugettext_lazy('MXN')),
+    (charge_currency_usd, ugettext_lazy('USD')),
+)
