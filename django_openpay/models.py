@@ -136,7 +136,7 @@ class Customer(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.code:
-            if not self._openpay_obj:
+            if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
         super(Customer, self).delete(*args, **kwargs)
@@ -153,9 +153,10 @@ class Customer(models.Model):
 
 @receiver(pre_save, sender=Customer)
 def customer_pre(sender, instance=None, **kwargs):
+    instance.full_clean()
     instance.email = instance.email.strip()
     if instance.code:
-        if not instance._openpay_obj:
+        if not hasattr(instance, '_openpay_obj'):
             instance.retrieve()
 
         instance._openpay_obj.name = instance.first_name
@@ -279,7 +280,7 @@ class Card(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.code and self.customer and self.customer.code:
-            if not self._openpay_obj:
+            if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
         super(Card, self).delete(*args, **kwargs)
@@ -294,6 +295,7 @@ class Card(models.Model):
 # @receiver(pre_save, sender=Card)
 # def card_pre(sender, instance=None, **kwargs):
 #     instance.retrieve()
+#     instance.full_clean()
 
 
 class Plan(models.Model):
@@ -351,7 +353,7 @@ class Plan(models.Model):
         verbose_name=ugettext_lazy('Frecuency Unit')
     )
     creation_date = models.DateTimeField(
-        blank=False,
+        blank=True,
         null=False,
         verbose_name=ugettext_lazy('Creation date')
     )
@@ -375,7 +377,7 @@ class Plan(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.code:
-            if not self._openpay_obj:
+            if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
         super(Plan, self).delete(*args, **kwargs)
@@ -386,8 +388,9 @@ class Plan(models.Model):
 
 @receiver(pre_save, sender=Plan)
 def plan_pre(sender, instance=None, **kwargs):
+    instance.full_clean()
     if instance.code:
-        if not instance._openpay_obj:
+        if not hasattr(instance, '_openpay_obj'):
             instance.retrieve()
 
         instance._openpay_obj.name = instance.name
@@ -479,7 +482,7 @@ class Subscription(models.Model):
 
     def delete(self, *args, **kwargs):
         if self.code and self.customer.code:
-            if not self._openpay_obj:
+            if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
         super(Subscription, self).delete(*args, **kwargs)
@@ -496,9 +499,10 @@ def subscription_pre(sender, instance=None, **kwargs):
         raise exceptions.OpenpayNoCustomer
     if not instance.card or not instance.card.code:
         raise exceptions.OpenpayNoCard
+    instance.full_clean()
 
     if instance.code:
-        if not instance._openpay_obj:
+        if not hasattr(instance, '_openpay_obj'):
             instance.retrieve()
 
         instance._openpay_obj.plan_id = instance.plan.code
