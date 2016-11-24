@@ -59,6 +59,26 @@ class Address(models.Model):
         verbose_name=ugettext_lazy('Country')
     )
 
+    @classmethod
+    def get_readonly_fields(self, instance=None):
+        if instance:
+            return []
+        return []
+
+    def push(self):
+        raise NotImplementedError
+
+    def pull(self):
+        raise NotImplementedError
+
+    def retrieve(self):
+        raise NotImplementedError
+
+    def remove(self):
+        raise NotImplementedError
+
+    # TODO: From idless_dict
+
     # Obtained and edited from:
     # https://goo.gl/SqkLbo
     def to_idless_dict(self):
@@ -92,8 +112,8 @@ class Customer(models.Model):
     )
     last_name = models.CharField(
         max_length=60,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         verbose_name=ugettext_lazy('Last Name'),
     )
     email = models.EmailField(
@@ -104,8 +124,8 @@ class Customer(models.Model):
     phone_number = models.CharField(
         validators=[phone_validator],
         max_length=15,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         verbose_name=ugettext_lazy('Phone Number'),
     )
     address = models.OneToOneField(
@@ -120,6 +140,12 @@ class Customer(models.Model):
         null=False,
         verbose_name=ugettext_lazy('Creation date')
     )
+
+    @classmethod
+    def get_readonly_fields(self, instance=None):
+        if instance:
+            return ['code', 'creation_date']
+        return ['code', 'creation_date']
 
     def push(self):
         if self.code:
@@ -243,26 +269,33 @@ class Card(models.Model):
     )
 
     @classmethod
+    def get_readonly_fields(self, instance=None):
+        if instance:
+            return ['code', 'card_type', 'holder', 'number', 'month', 'year',
+                    'customer', 'creation_date']
+        return ['code', 'card_type', 'holder', 'number', 'month', 'year',
+                'customer', 'creation_date']
+
+    @classmethod
     def tokenized_create(cls, customerId, tokenId, deviceId, alias=''):
         card_op = openpay.Card.create(customer=customerId, token_id=tokenId,
                                       device_session_id=deviceId)
-
-        if card_op.id:
-            customer = Customer.objects.get(code=customerId)
-            card = cls(
-                code=card_op.id,
-                alias=alias,
-                card_type=card_op.type,
-                holder=card_op.holder_name,
-                number=card_op.card_number[-4:],
-                month=card_op.expiration_month[-2:],
-                year=card_op.expiration_year[-2:],
-                creation_date=parse_datetime(
-                    card_op.creation_date),
-                customer=customer
-            )
-            card._openpay_obj = card_op
-            return card.save()
+        customer = Customer.objects.get(code=customerId)
+        # The card addres cannot be consulted
+        card = cls(
+            code=card_op.id,
+            alias=alias,
+            card_type=card_op.type,
+            holder=card_op.holder_name,
+            number=card_op.card_number[-4:],
+            month=card_op.expiration_month[-2:],
+            year=card_op.expiration_year[-2:],
+            creation_date=parse_datetime(
+                card_op.creation_date),
+            customer=customer
+        )
+        card._openpay_obj = card_op
+        return card.save()
 
     def push(self):
         raise NotImplementedError
@@ -374,17 +407,19 @@ class Plan(models.Model):
         verbose_name=ugettext_lazy('Creation date')
     )
 
+    @classmethod
+    def get_readonly_fields(self, instance=None):
+        if instance:
+            return ['code', 'amount', 'retry_times', 'status_after_retry',
+                    'repeat_every', 'repeat_unit', 'creation_date']
+        return ['code', 'creation_date']
+
     def push(self):
         if self.code:
             if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.name = self.name
-            self._openpay_obj.amount = str(self.amount)
-            self._openpay_obj.status_after_retry = self.status_after_retry
-            self._openpay_obj.retry_times = self.retry_times
-            self._openpay_obj.repeat_unit = self.repeat_unit
             self._openpay_obj.trial_days = self.trial_days
-            self._openpay_obj.repeat_every = self.repeat_every
             self._openpay_obj.save()
 
         else:
@@ -480,16 +515,21 @@ class Subscription(models.Model):
         verbose_name=ugettext_lazy('Trial days')
     )
     creation_date = models.DateTimeField(
-        blank=False,
+        blank=True,
         null=False,
         verbose_name=ugettext_lazy('Creation date')
     )
+
+    @classmethod
+    def get_readonly_fields(self, instance=None):
+        if instance:
+            return ['code', 'customer', 'plan', 'creation_date']
+        return ['code', 'creation_date']
 
     def push(self):
         if self.code:
             if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
-            self._openpay_obj.plan_id = self.plan.code
             self._openpay_obj.trial_end_date = \
                 self.trial_end_date.isoformat()
             self._openpay_obj.card = None
@@ -511,9 +551,10 @@ class Subscription(models.Model):
                 if self.trial_end_date else None,
                 card_id=self.card.code,
             )
-            self._openpay_obj.cancel_at_period_end = \
-                self.cancel_at_period_end
-            self._openpay_obj.save()
+            if self.cancel_at_period_end:
+                self._openpay_obj.cancel_at_period_end = \
+                    self.cancel_at_period_end
+                self._openpay_obj.save()
             self.code = self._openpay_obj.id
             self.pull()
 
@@ -608,11 +649,17 @@ class Charge(models.Model):
         verbose_name=ugettext_lazy('Plan')
     )
     creation_date = models.DateTimeField(
-        blank=False,
+        blank=True,
         null=False,
         verbose_name=ugettext_lazy('Creation date')
     )
 
+    @classmethod
+    def get_readonly_fields(self, instance=None):
+        if instance:
+            return ['code', 'description', 'amount', 'method', 'customer',
+                    'card', 'plan', 'creation_date']
+        return ['code', 'creation_date']
     def push(self):
         raise NotImplementedError
 
