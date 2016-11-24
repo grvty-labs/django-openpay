@@ -23,6 +23,7 @@ Features
     *   Customers
     *   Plans
     *   Subscriptions
+    *   Charges
 
 2.  Delete directly from Django into OpenPay:
     *   Customers
@@ -82,11 +83,17 @@ Versions
 *   v0.2
     *   Fixed the aspect of internationalization using `ugettext` and
     `ugettext_lazy`.
-    *   Moved the functionality from the `save` in all models to their
+    *   Moved the functionality from the `save` function in all models to their
     corresponding signal. (In order to prevent errors from the `save`
     overwrite).
-    *   New exceptions types added.
+    *   Moved the functionality from the `delete` function in all models to
+    their corresponding signal. (In order to prevent errors from the `delete`
+    overwrite).
+    *   New exception types added.
     *   The `django-admin` now displays more information in each model's list.
+    *   Added the `get_readonly_fields` function to all models, to prevent
+    changes in the instances that will NOT be reflected in the Openpay Admin.
+    *   Improved the Charges model.
     *   The `testing` folder was included with some simple configurations to
     experiment with this package.
     *   `MANIFEST.in` was updated to prevent `setuptools` from uploading trash.
