@@ -1,15 +1,14 @@
 var React = require('react');
-var PropTypes = React.PropTypes;
 var jQuery = require('jquery');
 var openpay = require('openpay');
 var Csrf = require('./tools/csrf');
 
 var OpenPayCardCreate = React.createClass({
   propTypes: {
-    merchantID: PropTypes.string.isRequired,
-    publicKey: PropTypes.string.isRequired,
-    customerID: PropTypes.string.isRequired,
-    sandboxActive: PropTypes.bool.isRequired,
+    merchantID: React.PropTypes.string.isRequired,
+    publicKey: React.PropTypes.string.isRequired,
+    customerID: React.PropTypes.string.isRequired,
+    sandboxActive: React.PropTypes.bool.isRequired,
   },
 
   getInitialState: function () {
@@ -72,9 +71,11 @@ var OpenPayCardCreate = React.createClass({
 
   clearForm: function () {
     this.setState({
+      cardSaved: false,
       validations: {
         number: true,
         cvv: true,
+        expiration: true,
       },
       card: {
         holderName: '',
@@ -185,25 +186,7 @@ var OpenPayCardCreate = React.createClass({
 
   },
 
-  renderMonthOptions: function () {
-    var monthsOptions = [
-      <option value='01' key={ 1 }>Jan (01)</option>,
-      <option value='02' key={ 2 }>Feb (02)</option>,
-      <option value='03' key={ 3 }>Mar (03)</option>,
-      <option value='04' key={ 4 }>Apr (04)</option>,
-      <option value='05' key={ 5 }>May (05)</option>,
-      <option value='06' key={ 6 }>June (06)</option>,
-      <option value='07' key={ 7 }>July (07)</option>,
-      <option value='08' key={ 8 }>Aug (08)</option>,
-      <option value='09' key={ 9 }>Sep (09)</option>,
-      <option value='10' key={ 10 }>Oct (10)</option>,
-      <option value='11' key={ 11 }>Nov (11)</option>,
-      <option value='12' key={ 12 }>Dec (12)</option>,
-    ];
-    return monthsOptions;
-  },
-
-  renderYearOptions: function () {
+  render: function () {
     var year = new Date().getFullYear();
     var yearOptions = [];
     for (var i = year; i < year + 10; i++) {
@@ -212,10 +195,6 @@ var OpenPayCardCreate = React.createClass({
       );
     }
 
-    return yearOptions;
-  },
-
-  render: function () {
     return (
       <div className='openpay payout'>
         <form id='formId' onSubmit={ this.submitRegister }>
@@ -245,13 +224,24 @@ var OpenPayCardCreate = React.createClass({
               <select id='card_expiration_month' value={ this.state.card.month }
                 onChange={ this.handleCardChange.bind(this, 'month') }
                 onBlur={ this.handleCardBlur.bind(null, 'month') }>
-                { this.renderMonthOptions() }
+                <option value='01' key={ 1 }>Jan (01)</option>
+                <option value='02' key={ 2 }>Feb (02)</option>
+                <option value='03' key={ 3 }>Mar (03)</option>
+                <option value='04' key={ 4 }>Apr (04)</option>
+                <option value='05' key={ 5 }>May (05)</option>
+                <option value='06' key={ 6 }>June (06)</option>
+                <option value='07' key={ 7 }>July (07)</option>
+                <option value='08' key={ 8 }>Aug (08)</option>
+                <option value='09' key={ 9 }>Sep (09)</option>
+                <option value='10' key={ 10 }>Oct (10)</option>
+                <option value='11' key={ 11 }>Nov (11)</option>
+                <option value='12' key={ 12 }>Dec (12)</option>
               </select>
 
               <select id='card_expiration_year' value={ this.state.card.year }
                 onChange={ this.handleCardChange.bind(this, 'year') }
                 onBlur={ this.handleCardBlur.bind(null, 'year') }>
-                { this.renderYearOptions() }
+                { yearOptions }
               </select>
             </div>
 
@@ -261,7 +251,7 @@ var OpenPayCardCreate = React.createClass({
                 autoComplete='off' value={ this.state.card.cvv }
                 onChange={ this.handleCardChange.bind(this, 'cvv') }
                 onBlur={ this.handleCardBlur.bind(null, 'cvv') }
-                />
+              />
             </div>
           </div>
 
@@ -303,7 +293,7 @@ var OpenPayCardCreate = React.createClass({
               <input type='text' id='address_state' placeholder='Estado'
                 value={ this.state.address.state }
                 onChange={ this.handleAddressChange.bind(this, 'state') }
-                />
+              />
             </div>
 
             <div className='field'>
@@ -311,7 +301,7 @@ var OpenPayCardCreate = React.createClass({
               <input type='text' id='address_country_code' placeholder='Código del País'
                 value={ this.state.address.countryCode }
                 onChange={ this.handleAddressChange.bind(this, 'countryCode') }
-                />
+              />
             </div>
 
             <div className='field'>
@@ -319,7 +309,7 @@ var OpenPayCardCreate = React.createClass({
               <input type='text' id='address_postal_code' placeholder='Código Postal'
                 value={ this.state.address.postalCode }
                 onChange={ this.handleAddressChange.bind(this, 'postalCode') }
-                />
+              />
             </div>
           </div>
 
