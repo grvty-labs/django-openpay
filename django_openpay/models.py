@@ -1,7 +1,7 @@
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.fields.related import ManyToManyField
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 from django.utils.dateparse import parse_datetime, parse_date
 
@@ -121,25 +121,48 @@ class Customer(models.Model):
         verbose_name=ugettext_lazy('Creation date')
     )
 
-    def retrieve(self, update=False):
+    def push(self):
+        if self.code:
+            if not hasattr(self, '_openpay_obj'):
+                self.retrieve()
+            self._openpay_obj.name = self.first_name
+            self._openpay_obj.last_name = self.last_name
+            self._openpay_obj.email = self.email
+            self._openpay_obj.phone_number = self.phone_number
+            self._openpay_obj.address = self.address.to_idless_dict()
+            self._openpay_obj.save()
+
+        else:
+            self._openpay_obj = openpay.Customer.create(
+                name=self.first_name,
+                last_name=self.last_name,
+                email=self.email,
+                phone_number=self.phone_number,
+                address=self.address.to_idless_dict(),
+            )
+            self.code = self._openpay_obj.id
+            self.pull()
+
+    def pull(self):
+        self.retrieve()
+        self.first_name = self._openpay_obj.name
+        self.last_name = self._openpay_obj.last_name
+        self.email = self._openpay_obj.email
+        self.phone_number = self._openpay_obj.phone_number
+        self.creation_date = parse_datetime(
+            self._openpay_obj.creation_date)
+
+    def retrieve(self):
         if self.code:
             self._openpay_obj = openpay.Customer.retrieve(self.code)
-            if update:
-                self.first_name = self._openpay_obj.name
-                self.last_name = self._openpay_obj.last_name
-                self.email = self._openpay_obj.email
-                self.phone_number = self._openpay_obj.phone_number
-                self.creation_date = parse_datetime(
-                    self._openpay_obj.creation_date)
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
-    def delete(self, *args, **kwargs):
+    def remove(self):
         if self.code:
             if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
-        super(Customer, self).delete(*args, **kwargs)
 
     @property
     def full_name(self):
@@ -152,30 +175,15 @@ class Customer(models.Model):
 
 
 @receiver(pre_save, sender=Customer)
-def customer_pre(sender, instance=None, **kwargs):
+def customer_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     instance.email = instance.email.strip()
-    if instance.code:
-        if not hasattr(instance, '_openpay_obj'):
-            instance.retrieve()
+    instance.push()
 
-        instance._openpay_obj.name = instance.first_name
-        instance._openpay_obj.last_name = instance.last_name
-        instance._openpay_obj.email = instance.email
-        instance._openpay_obj.phone_number = instance.phone_number
-        instance._openpay_obj.address = instance.address.to_idless_dict()
-        instance._openpay_obj.save()
 
-    else:
-        instance._openpay_obj = openpay.Customer.create(
-            name=instance.first_name,
-            last_name=instance.last_name,
-            email=instance.email,
-            phone_number=instance.phone_number,
-            address=instance.address.to_idless_dict(),
-        )
-        instance.code = instance._openpay_obj.id
-        instance.retrieve(update=True)
+@receiver(post_delete, sender=Customer)
+def customer_postdelete(sender, instance, **kwargs):
+    instance.remove()
 
 
 class Card(models.Model):
@@ -256,7 +264,20 @@ class Card(models.Model):
             card._openpay_obj = card_op
             return card.save()
 
-    def retrieve(self, update=False):
+    def push(self):
+        raise NotImplementedError
+
+    def pull(self):
+        self.retrieve()
+        self.card_type = self._openpay_obj.type
+        self.holder = self._openpay_obj.holder_name
+        self.number = self._openpay_obj.card_number[-4:]
+        self.month = self._openpay_obj.expiration_month[-2:]
+        self.year = self._openpay_obj.expiration_year[-2:]
+        self.creation_date = parse_datetime(
+            self._openpay_obj.creation_date)
+
+    def retrieve(self):
         if not self.customer or not self.customer.code:
             raise exceptions.OpenpayNoCustomer
 
@@ -266,24 +287,15 @@ class Card(models.Model):
             ).cards.retrieve(
                 self.code
             )
-            if update:
-                self.card_type = self._openpay_obj.type
-                self.holder = self._openpay_obj.holder_name
-                self.number = self._openpay_obj.card_number[-4:]
-                self.month = self._openpay_obj.expiration_month[-2:]
-                self.year = self._openpay_obj.expiration_year[-2:]
-                self.creation_date = parse_datetime(
-                    self._openpay_obj.creation_date)
 
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
-    def delete(self, *args, **kwargs):
-        if self.code and self.customer and self.customer.code:
+    def remove(self):
+        if self.code:
             if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
-        super(Card, self).delete(*args, **kwargs)
 
     def __str__(self):
         if self.alias:
@@ -292,10 +304,14 @@ class Card(models.Model):
 
 
 # TODO: Card creation without token
-# @receiver(pre_save, sender=Card)
-# def card_pre(sender, instance=None, **kwargs):
-#     instance.retrieve()
-#     instance.full_clean()
+@receiver(pre_save, sender=Card)
+def card_presave(sender, instance=None, **kwargs):
+    instance.full_clean()
+
+
+@receiver(post_delete, sender=Card)
+def card_postdelete(sender, instance, **kwargs):
+    instance.remove()
 
 
 class Plan(models.Model):
@@ -358,62 +374,70 @@ class Plan(models.Model):
         verbose_name=ugettext_lazy('Creation date')
     )
 
-    def retrieve(self, update=False):
+    def push(self):
+        if self.code:
+            if not hasattr(self, '_openpay_obj'):
+                self.retrieve()
+            self._openpay_obj.name = self.name
+            self._openpay_obj.amount = str(self.amount)
+            self._openpay_obj.status_after_retry = self.status_after_retry
+            self._openpay_obj.retry_times = self.retry_times
+            self._openpay_obj.repeat_unit = self.repeat_unit
+            self._openpay_obj.trial_days = self.trial_days
+            self._openpay_obj.repeat_every = self.repeat_every
+            self._openpay_obj.save()
+
+        else:
+            self._openpay_obj = openpay.Plan.create(
+                name=self.name,
+                amount=str(self.amount),
+                status_after_retry=self.status_after_retry,
+                retry_times=self.retry_times,
+                repeat_unit=self.repeat_unit,
+                trial_days=self.trial_days,
+                repeat_every=self.repeat_every,
+            )
+            self.code = self._openpay_obj.id
+            self.pull()
+
+    def pull(self):
+        self.retrieve()
+        self.name = self._openpay_obj.name
+        self.amount = Decimal(self._openpay_obj.amount)
+        self.status_after_retry = self._openpay_obj.status_after_retry
+        self.retry_times = self._openpay_obj.retry_times
+        self.repeat_unit = self._openpay_obj.repeat_unit
+        self.trial_days = self._openpay_obj.trial_days
+        self.repeat_every = self._openpay_obj.repeat_every
+        self.creation_date = parse_datetime(
+            self._openpay_obj.creation_date)
+
+    def retrieve(self):
         if self.code:
             self._openpay_obj = openpay.Plan.retrieve(self.code)
-            if update:
-                self.name = self._openpay_obj.name
-                self.amount = Decimal(self._openpay_obj.amount)
-                self.status_after_retry = self._openpay_obj.status_after_retry
-                self.retry_times = self._openpay_obj.retry_times
-                self.repeat_unit = self._openpay_obj.repeat_unit
-                self.trial_days = self._openpay_obj.trial_days
-                self.repeat_every = self._openpay_obj.repeat_every
-                self.creation_date = parse_datetime(
-                    self._openpay_obj.creation_date)
 
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
-    def delete(self, *args, **kwargs):
+    def remove(self):
         if self.code:
             if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
-        super(Plan, self).delete(*args, **kwargs)
 
     def __str__(self):
         return self.name
 
 
 @receiver(pre_save, sender=Plan)
-def plan_pre(sender, instance=None, **kwargs):
+def plan_presave(sender, instance=None, **kwargs):
     instance.full_clean()
-    if instance.code:
-        if not hasattr(instance, '_openpay_obj'):
-            instance.retrieve()
+    instance.push()
 
-        instance._openpay_obj.name = instance.name
-        instance._openpay_obj.amount = str(instance.amount)
-        instance._openpay_obj.status_after_retry = instance.status_after_retry
-        instance._openpay_obj.retry_times = instance.retry_times
-        instance._openpay_obj.repeat_unit = instance.repeat_unit
-        instance._openpay_obj.trial_days = instance.trial_days
-        instance._openpay_obj.repeat_every = instance.repeat_every
-        instance._openpay_obj.save()
 
-    else:
-        instance._openpay_obj = openpay.Plan.create(
-            name=instance.name,
-            amount=str(instance.amount),
-            status_after_retry=instance.status_after_retry,
-            retry_times=instance.retry_times,
-            repeat_unit=instance.repeat_unit,
-            trial_days=instance.trial_days,
-            repeat_every=instance.repeat_every,
-        )
-        instance.code = instance._openpay_obj.id
-        instance.retrieve(update=True)
+@receiver(post_delete, sender=Plan)
+def plan_postdelete(sender, instance, **kwargs):
+    instance.remove()
 
 
 class Subscription(models.Model):
@@ -461,7 +485,48 @@ class Subscription(models.Model):
         verbose_name=ugettext_lazy('Creation date')
     )
 
-    def retrieve(self, update=False):
+    def push(self):
+        if self.code:
+            if not hasattr(self, '_openpay_obj'):
+                self.retrieve()
+            self._openpay_obj.plan_id = self.plan.code
+            self._openpay_obj.trial_end_date = \
+                self.trial_end_date.isoformat()
+            self._openpay_obj.card = None
+            self._openpay_obj.card_id = self.card.code
+            self._openpay_obj.cancel_at_period_end = \
+                self.cancel_at_period_end
+            self._openpay_obj.save()
+
+        else:
+            if not self.customer or not self.customer.code:
+                raise exceptions.OpenpayNoCustomer
+            if not self.card or not self.card.code:
+                raise exceptions.OpenpayNoCard
+            self._openpay_obj = openpay.Customer.retrieve(
+                self.customer.code
+            ).subscriptions.create(
+                plan_id=self.plan.code,
+                trial_end_date=self.trial_end_date.isoformat()
+                if self.trial_end_date else None,
+                card_id=self.card.code,
+            )
+            self._openpay_obj.cancel_at_period_end = \
+                self.cancel_at_period_end
+            self._openpay_obj.save()
+            self.code = self._openpay_obj.id
+            self.pull()
+
+    def pull(self):
+        self.retrieve()
+        self.trial_end_date = parse_date(
+            self._openpay_obj.trial_end_date)
+        self.cancel_at_period_end = \
+            self._openpay_obj.cancel_at_period_end
+        self.creation_date = parse_datetime(
+            self._openpay_obj.creation_date)
+
+    def retrieve(self):
         if not self.customer or not self.customer.code:
             raise exceptions.OpenpayNoCustomer
 
@@ -469,23 +534,15 @@ class Subscription(models.Model):
             self._openpay_obj = openpay.Customer.retrieve(
                 self.customer.code
             ).subscriptions.retrieve(self.code)
-            if update:
-                self.trial_end_date = parse_date(
-                    self._openpay_obj.trial_end_date)
-                self.cancel_at_period_end = \
-                    self._openpay_obj.cancel_at_period_end
-                self.creation_date = parse_datetime(
-                    self._openpay_obj.creation_date)
 
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
-    def delete(self, *args, **kwargs):
-        if self.code and self.customer.code:
+    def remove(self):
+        if self.code:
             if not hasattr(self, '_openpay_obj'):
                 self.retrieve()
             self._openpay_obj.delete()
-        super(Subscription, self).delete(*args, **kwargs)
 
     def __str__(self):
         return '{plan} |> {customer}'.format(
@@ -494,41 +551,14 @@ class Subscription(models.Model):
 
 
 @receiver(pre_save, sender=Subscription)
-def subscription_pre(sender, instance=None, **kwargs):
-    if not instance.customer or not instance.customer.code:
-        raise exceptions.OpenpayNoCustomer
-    if not instance.card or not instance.card.code:
-        raise exceptions.OpenpayNoCard
+def subscription_presave(sender, instance=None, **kwargs):
     instance.full_clean()
+    instance.push()
 
-    if instance.code:
-        if not hasattr(instance, '_openpay_obj'):
-            instance.retrieve()
 
-        instance._openpay_obj.plan_id = instance.plan.code
-        instance._openpay_obj.trial_end_date = \
-            instance.trial_end_date.isoformat()
-        instance._openpay_obj.card = None
-        instance._openpay_obj.card_id = instance.card.code
-        instance._openpay_obj.cancel_at_period_end = \
-            instance.cancel_at_period_end
-        instance._openpay_obj.save()
-
-    else:
-        instance._openpay_obj = openpay.Customer.retrieve(
-            instance.customer.code
-        ).subscriptions.create(
-            plan_id=instance.plan.code,
-            trial_end_date=instance.trial_end_date.isoformat()
-            if instance.trial_end_date else None,
-            card_id=instance.card.code,
-        )
-        instance._openpay_obj.cancel_at_period_end = \
-            instance.cancel_at_period_end
-        instance._openpay_obj.save()
-        instance._openpay_obj.code = subscription.id
-        instance.code = instance._openpay_obj.id
-        instance.retrieve(update=True)
+@receiver(post_delete, sender=Subscription)
+def subscription_postdelete(sender, instance, **kwargs):
+    instance.remove()
 
 
 class Charge(models.Model):
@@ -582,3 +612,15 @@ class Charge(models.Model):
         null=False,
         verbose_name=ugettext_lazy('Creation date')
     )
+
+    def push(self):
+        raise NotImplementedError
+
+    def pull(self):
+        raise NotImplementedError
+
+    def retrieve(self):
+        raise NotImplementedError
+
+    def remove(self):
+        raise NotImplementedError
