@@ -15,7 +15,7 @@ console.log('PRODUCTION: ' + PROD);
 var entries = {
   // OpenPay_Card_Create: './django_openpay/static/django_openpay/js/openpay_card_creation.jsx',
   // OpenPay_Payout: './django_openpay/static/django_openpay/js/openpay_payout.jsx',
-  Testing: './django_openpay/static/django_openpay/testing.jsx',
+  Testing: './built/django_openpay/testing.jsx',
 };
 
 var outputDir = PROD ?

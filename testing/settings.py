@@ -26,7 +26,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 OPENPAY_PRIVATE_API_KEY = os.environ.get('OPENPAY_PRIVATE_API_KEY')
 OPENPAY_PUBLIC_API_KEY = os.environ.get('OPENPAY_PUBLIC_API_KEY')
 OPENPAY_MERCHANT_ID = os.environ.get('OPENPAY_MERCHANT_ID')
-OPENPAY_VERIFY_SSL=False
+OPENPAY_VERIFY_SSL = False
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -114,6 +114,7 @@ USE_TZ = True
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'django_openpay/static'),
+    os.path.join(BASE_DIR, 'testing/static'),
     os.path.join(BASE_DIR, 'webpack'),
 ]
 
@@ -123,6 +124,7 @@ STATICFILES_FINDERS = (
 )
 
 STATIC_URL = '/built/'
+STATIC_ROOT = 'built/'
 
 TEMPLATES = [
     {
