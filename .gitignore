@@ -11,6 +11,7 @@ __pycache__/
 env/
 build/
 develop-eggs/
+dist/
 downloads/
 eggs/
 .eggs/
@@ -87,19 +88,38 @@ ENV/
 # Rope project settings
 .ropeproject
 
+# REDIS
+dump.rdb
 
-bin/
-django_openpay_repo/
-dist/
-!dist/OpenPay*
-!django_openpay/dist
-!django_openpay/dist/
-!django_openpay/dist/*
-include/
-lib/
-manage.py
+# GRVTYlabs
 pip-selfcheck.json
+bin/*
+include/*
+share/*
+Scripts/*
+webpack/*
 db.sqlite3
-media/
-built/
-node_modules/
+db.sqlite3-journal
+built/*
+node_modules/*
+dist/*
+static/dist/*
+
+# MEDIA
+media/*
+!media/defaults/*
+media/defaults/*.jpg.*
+media/defaults/*.png.*
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# REPO
+django_openpay_repo/
+/manage.py
+/package.json
+/requirements.txt
+/webpack.config.js
+!testing/*
