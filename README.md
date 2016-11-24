@@ -4,7 +4,7 @@
 Django app for online transactions
 ----------------------------------
 
-[OpenPay](http://www.openpay.mx/en/) is an online gateway to execute online
+[OpenPay][openpay-page] is an online gateway to execute online
 payments using debit/credit cards or bank transferences. OpenPay allows to
 create Plans for system memberships, with an autocharge system.
 
@@ -19,26 +19,22 @@ saving sensitive information in your django application.
 Features
 --------
 
-Create directly from Django into OpenPay:
+1.  Create directly from Django into OpenPay:
+    *   Customers
+    *   Plans
+    *   Subscriptions
 
-*   Customers
-*   Plans
-*   Subscriptions
+2.  Delete directly from Django into OpenPay:
+    *   Customers
+    *   Plans
+    *   Subscriptions
+    *   Cards
 
-Delete directly from Django into OpenPay:
+3.  Create from JSX into OpenPay:
+    *   Cards
 
-*   Customers
-*   Plans
-*   Subscriptions
-*   Cards
-
-Create from JSX into OpenPay:
-
-*   Cards
-
-Reflect through webhooks from OpenPay into Django:
-
-*   Charges
+4.  Reflect through webhooks from OpenPay into Django:
+    *   Charges
 
 Installation
 ------------
@@ -56,23 +52,18 @@ the Node package to be used directly from front-end.
 
 To use the JSX file, be sure to include in your HTML head:
 
-`  <script type='text/javascript' src='https://code.jquery.com/jquery-3.1.0.min.js'></script>`
-
-`<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay.v1.min.js'></script>`
-
-`<script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay-data.v1.min.js'></script>`
+    <script type='text/javascript' src='https://code.jquery.com/jquery-3.1.0.min.js'></script>
+    <script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay.v1.min.js'></script>
+    <script type='text/javascript' src='https://openpay.s3.amazonaws.com/openpay-data.v1.min.js'></script>
 
 This package requires to have knowledge of your Openpay's public, private and
 merchant keys. To do this you just have to put your keys inside the
 `settings.py` file of your Django project using the following variables:
 
-   -`OPENPAY_PRIVATE_API_KEY`
-
-   -`OPENPAY_PUBLIC_API_KEY`
-
-   -`OPENPAY_MERCHANT_ID`
-
-   -`OPENPAY_VERIFY_SSL`
+*   `OPENPAY_PRIVATE_API_KEY`
+*   `OPENPAY_PUBLIC_API_KEY`
+*   `OPENPAY_MERCHANT_ID`
+*   `OPENPAY_VERIFY_SSL`
 
 TODOs
 -----
@@ -83,6 +74,39 @@ TODOs
 *   Transferences
 *   Fees
 *   Payouts
+*   Celery to prevent bottlenecks
+
+Versions
+--------
+
+*   v0.2
+    *   Fixed the aspect of internationalization using `ugettext` and
+    `ugettext_lazy`.
+    *   Moved the functionality from the `save` in all models to their
+    corresponding signal. (In order to prevent errors from the `save`
+    overwrite).
+    *   New exceptions types added.
+    *   The `django-admin` now displays more information in each model's list.
+    *   The `testing` folder was included with some simple configurations to
+    experiment with this package.
+    *   `MANIFEST.in` was updated to prevent `setuptools` from uploading trash.
+
+
+*   v0.1
+    *   Created the initial connections to the Openpay API.
+    *   Create directly from Django into OpenPay:
+        *   Customers
+        *   Plans
+        *   Subscriptions
+    *   Delete directly from Django into OpenPay:
+        *   Customers
+        *   Plans
+        *   Subscriptions
+        *   Cards
+    *   Create from JSX into OpenPay:
+        *   Cards
+    *   Reflect through webhooks from OpenPay into Django:
+        *   Charges (Pending tests)
 
 Disclaimer
 ---------
@@ -105,3 +129,4 @@ Owned and developed by
 [logo]: https://github.com/grvty-labs/django-openpay/blob/master/logo.png?raw=true "GRVTYlabs"
 [stack-shield]: http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat
 [stack-tech]: http://stackshare.io/letops/grvtylabs
+[openpay-page]: http://www.openpay.mx/en/
