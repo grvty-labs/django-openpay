@@ -26,6 +26,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 OPENPAY_PRIVATE_API_KEY = os.environ.get('OPENPAY_PRIVATE_API_KEY')
 OPENPAY_PUBLIC_API_KEY = os.environ.get('OPENPAY_PUBLIC_API_KEY')
 OPENPAY_MERCHANT_ID = os.environ.get('OPENPAY_MERCHANT_ID')
+OPENPAY_DEVICE_ID = os.environ.get('OPENPAY_DEVICE_ID')
 OPENPAY_VERIFY_SSL = False
 
 # SECURITY WARNING: don't run with debug turned on in production!

@@ -702,7 +702,7 @@ class Charge(models.Model):
                 amount=str(self.amount),
                 currency=self.currency,
                 description=self.description,
-                device_session_id='sdfghjqwertyu',  # FIXME: This is not acceptable
+                device_session_id=openpay.device_id,
                 capture=False,
             )
             self.code = self._openpay_obj.id
