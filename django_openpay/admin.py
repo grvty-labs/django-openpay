@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . import models
+from . import models, ugettext
 
 
 # Register your models here.
@@ -55,8 +55,39 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(models.Charge)
 class ChargeAdmin(admin.ModelAdmin):
     model = models.Charge
-    list_display = ('openpay_id', 'customer', 'plan', 'card', 'amount',
+    actions = ['capture', 'refund']
+    list_display = ('openpay_id', 'customer', 'card', 'amount',
                     'creation_date')
+
+    def capture(self, request, queryset):
+        captured = 0
+        for charge in queryset:
+            charge.capture()
+            captured = captured + 1
+        if captured == 1:
+            message_bit = "1 charge was"
+        else:
+            message_bit = "%s charges were" % captured
+        self.message_user(
+            request,
+            "%s successfully captured." % message_bit
+        )
+    capture.short_description = ugettext('Capture selected charges')
+
+    def refund(self, request, queryset):
+        refunded = 0
+        for charge in queryset:
+            charge.refund()
+            refunded = refunded + 1
+        if refunded == 1:
+            message_bit = "1 charge was"
+        else:
+            message_bit = "%s charges were" % refunded
+            self.message_user(
+                request,
+                "%s successfully refunded." % message_bit
+            )
+    refund.short_description = ugettext('Refund selected charges')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Charge.get_readonly_fields(obj)

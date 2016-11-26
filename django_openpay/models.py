@@ -585,6 +585,8 @@ class Subscription(AbstractOpenpayBase):
 @receiver(pre_save, sender=Subscription)
 def subscription_presave(sender, instance=None, **kwargs):
     instance.full_clean()
+    if instance.card.customer_id != instance.customer_id:
+        raise exceptions.OpenpayNotUserCard
     instance.push()
 
 
@@ -647,10 +649,10 @@ class Charge(AbstractOpenpayBase):
     def get_readonly_fields(self, instance=None):
         if instance:
             return ['openpay_id', 'description', 'amount', 'method',
-                    'customer', 'card', 'plan', 'creation_date']
+                    'currency', 'customer', 'card', 'creation_date']
         return ['openpay_id', 'creation_date']
 
-    def capture(self):
+    def capture(self):  # FIXME: Openpay has an error with this, not us.
         if self.openpay_id and self.method == hardcode.charge_method_card:
             if not hasattr(self, '_openpay'):
                 self.retrieve()
@@ -659,11 +661,11 @@ class Charge(AbstractOpenpayBase):
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
-    def refund(self):
+    def refund(self):  # FIXME: Openpay has an error with this, not us.
         if self.openpay_id and self.method == hardcode.charge_method_card:
             if not hasattr(self, '_openpay'):
                 self.retrieve()
-            self._openpay.refund()
+            self._openpay.refund(merchant=False)
             self.refund = True
             self.save()
 
@@ -682,7 +684,7 @@ class Charge(AbstractOpenpayBase):
                 currency=self.currency,
                 description=self.description,
                 device_session_id=openpay.device_id,
-                capture=False,
+                capture=True,
             )
             self.openpay_id = self._openpay.id
             self.pull()
@@ -716,6 +718,8 @@ class Charge(AbstractOpenpayBase):
 @receiver(pre_save, sender=Charge)
 def charge_presave(sender, instance=None, **kwargs):
     instance.full_clean()
+    if instance.card.customer_id != instance.customer_id:
+        raise exceptions.OpenpayNotUserCard
     instance.push()
 
 

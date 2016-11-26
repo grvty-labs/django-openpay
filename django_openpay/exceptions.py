@@ -31,3 +31,10 @@ class OpenpayNoCard(DjangoOpenpayError):
             ugettext("This object does not have a related card code and "
                      "cannot be saved in the OpenPay API.")
         )
+
+
+class OpenpayNotUserCard(DjangoOpenpayError):
+    def __init__(self):
+        super(OpenpayNotUserCard, self).__init__(
+            ugettext("This Card does not belong to this Customer.")
+        )
