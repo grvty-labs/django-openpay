@@ -33,25 +33,27 @@ def cardSave(request):
     return HttpResponse(status=400)
 
 
+@csrf_exempt
 @require_POST
+@decorators.basic_auth_required
 @transaction.atomic
-def chargeSave(request):
-    if request.is_ajax():
-        # body = json.loads(request.body.decode("utf-8"))
-        # token = body.get('token', False)
-        # deviceId = body.get('deviceId', False)
-        # customerId = body.get('customerId', False)
-        # if token and deviceId and customerId:
-        #     card = models.Card.tokenized_create(
-        #         customerId=customerId,
-        #         tokenId=token,
-        #         deviceId=deviceId,
-        #         alias=body.get('alias', '')
-        #     )
-        #
-        #     return HttpResponse(status=200)
-        print('AJAX')
-        print(request.body)
-    else:
-        print(request)
-    return HttpResponse(status=200)
+def webhook(request):
+    if request.method == 'POST':
+        body = json.loads(request.body.decode("utf-8"))
+
+        callFunctions = {
+            'verification': webhooks.verification,
+            'charge.refunded': webhooks.chargeRefunded,
+            'charge.cancelled': webhooks.chargeCancelled,
+            'charge.created': webhooks.chargeCreated,
+            'charge.succeeded': webhooks.chargeSucceeded
+            # TODO: Add pending webhooks
+        }
+        option = callFunctions.get(body.get('type', ''), None)
+
+        if option is not None:
+            option(body)
+        # TODO: Log the webhook
+        return HttpResponse()
+
+    return HttpResponse(status=400)

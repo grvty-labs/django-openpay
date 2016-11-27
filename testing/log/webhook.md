@@ -1,13 +1,17 @@
 Webhook Endpoint Log
 ====================
 
-This log was manually created using [RequestBin](https://requestb.in) and a
+This log was manually created using [RequestBin][requestbin-page] and a
 fake Openpay's Sandbox project. At the end of the testing, we will change all
 the codes and delete that Sandbox project to prevent the reuse of the same.
 
 All the webhook notifications arrive to the same URL (which needs to be
 previously configured in the Openpay dashboard and verified in the same
 place)
+
+The following webhook posts were added to a Postman project, so you can use
+them locally. Remember the webhooks have been set with a BasicAuth
+[![Run in Postman][postman-svg]][postman-pkg]
 
 ---
 **Authentication of webhook endpoint**
@@ -256,8 +260,6 @@ var body = {
 **Charges Succeeded (Create with capture ON)**
 
 ```javascript
-//Not tested yet
-var url = null;
 var body = {
   type: "charge.succeeded",
   event_date: "2016-11-25T18:10:59-06:00",
@@ -388,3 +390,18 @@ var body = null;
 var url = null;
 var body = null;
 ```
+
+Owned and developed by
+--------
+
+[![StackShare][stack-shield]][stack-tech]
+
+[![GRVTYlabs][logo]](www.grvtylabs.com)
+
+[logo]: https://github.com/grvty-labs/django-openpay/blob/master/logo.png?raw=true "GRVTYlabs"
+[stack-shield]: http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat
+[stack-tech]: http://stackshare.io/letops/grvtylabs
+
+[requestbin-page]: https://requestb.in
+[postman-svg]: https://run.pstmn.io/button.svg
+[postman-pkg]: https://app.getpostman.com/run-collection/929685fa23a4a51f1a2f
