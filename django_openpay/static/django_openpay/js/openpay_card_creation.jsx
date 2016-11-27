@@ -8,6 +8,7 @@ var OpenPayCardCreate = React.createClass({
     merchantID: React.PropTypes.string.isRequired,
     publicKey: React.PropTypes.string.isRequired,
     customerID: React.PropTypes.string.isRequired,
+    url: React.PropTypes.string.isRequired,
     sandboxActive: React.PropTypes.bool.isRequired,
   },
 
@@ -15,6 +16,7 @@ var OpenPayCardCreate = React.createClass({
     return {
       deviceId: null,
       cardSaved: false,
+      sending: false,
       validations: {
         number: true,
         cvv: true,
@@ -124,6 +126,7 @@ var OpenPayCardCreate = React.createClass({
     var card = this.state.card;
     var address = this.state.address;
     var deviceId = this.state.deviceId;
+    this.setState({ sending: true, cardSaved: false });
 
     openpay.token.create({
         card_number: card.number,
@@ -151,9 +154,8 @@ var OpenPayCardCreate = React.createClass({
           }.bind(this),
 
           type: 'POST',
-          url: CONST_DJANGO_CARD_SAVE,
+          url: this.props.url,
           contentType: 'application/json; charset=utf-8',
-          dataType: 'text',
           data: JSON.stringify({
             token: response.data.id,
             deviceId: deviceId,
@@ -163,25 +165,33 @@ var OpenPayCardCreate = React.createClass({
           success: function (result) {
             this.setState({ cardSaved: true, });
             alert('Successful');
+            console.log('Success');
           }.bind(this),
 
           error: function (xhr, status, err) {
-            console.log('URL: ' + CONST_DJANGO_CARD_SAVE + ' / ' + status + ' / ' + err.toString());
+            console.log('URL: ' + this.props.url + ' / ' + status +
+              ' / ' + err.toString());
             this.setState({ cardSaved: false, });
+            console.log('Error');
             alert('Error from django');
           }.bind(this),
+
+          complete: function (xhr, status) {
+            this.setState({ sending: false, });
+            console.log('Completed');
+          },
         });
       }.bind(this),
 
       function (response) {
-        var content = '';
-        content += 'Estatus del error: ' + response.data.status + '<br />';
-        content += 'Error: ' + response.message + '<br />';
-        content += 'Descripción: ' + response.data.description + '<br />';
-        content += 'ID de la petición: ' + response.data.request_id + '<br />';
+        var content = 'Estatus del error: ' + response.data.status;
+        content += ' |> Error: ' + response.message;
+        content += ' |> Descripción: ' + response.data.description;
+        content += ' |> ID de la petición: ' + response.data.request_id;
         console.log(content);
         alert('OPENPAY: Incomplete');
-      }
+        this.setState({ sending: false, });
+      }.bind(this)
     );
 
   },
@@ -314,7 +324,8 @@ var OpenPayCardCreate = React.createClass({
           </div>
 
           <div className='buttons'>
-            <button type='submit' className='register'>Registrar</button>
+            <button type='submit' className='register'
+              disabled={ this.state.sending }>Registrar</button>
             <button type='button' className='cancel'
               onClick={ this.clearForm }>Cancelar</button>
           </div>
