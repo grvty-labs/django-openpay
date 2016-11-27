@@ -29,6 +29,10 @@ OPENPAY_MERCHANT_ID = os.environ.get('OPENPAY_MERCHANT_ID')
 OPENPAY_DEVICE_ID = os.environ.get('OPENPAY_DEVICE_ID')
 OPENPAY_VERIFY_SSL = False
 
+BASICAUTH_USERS = {
+  "daniel": "grvtylabs"
+}
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
