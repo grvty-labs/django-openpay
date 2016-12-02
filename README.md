@@ -66,15 +66,40 @@ This package requires to have knowledge of your Openpay's public, private and
 merchant keys. To do this you just have to put your keys inside the
 `settings.py` file of your Django project using the following variables:
 
-*   `OPENPAY_PRIVATE_API_KEY`
-*   `OPENPAY_PUBLIC_API_KEY`
-*   `OPENPAY_MERCHANT_ID`
-*   `OPENPAY_VERIFY_SSL`
-*   `OPENPAY_DEVICE_ID`
+```python
+OPENPAY_PRIVATE_API_KEY='string'
+OPENPAY_PUBLIC_API_KEY='string'
+OPENPAY_MERCHANT_ID='string'
+OPENPAY_VERIFY_SSL=True  # or False
+OPENPAY_DEVICE_ID='string'
+```
 
+In order to be able to use the Webhooks feature, you need to link your Openpay
+project to a specific url of your project (which calls the
+`'django_openpay.views.webhook'` view), inside the Openpay system. Remember
+that this package tries to make everything as secure as possible and, for that
+same reason, you need to activate the BasicAuth option in the Openpay system
+when you are creating the webhook, using a username and a password (it must NOT
+be a Django user). That same username and password will be added directly in
+your django settings file inside the the variable `OPENPAY_BASICAUTH_USERS`.
+This variable should be used like:
+
+```python
+OPENPAY_BASICAUTH_USERS = {
+  "username": "password"
+}
+```
 
 Versions Released
 -----------------
+
+*   v0.3.0
+    *   **Not released yet**
+    *   Added the reception and interpretation of the information received from
+    Openpay through their **webhook**. A [Postman project][postman-pkg] has
+    been created for local testing. [RequestBin][requestbin-page] was used to
+    generate a [log][webhook-log] from which the Postman project was created.
+
 
 *   v0.2.0
     *   **This version is not 100% compatible with the previous version**. This
@@ -101,7 +126,6 @@ Versions Released
     *   The `django-admin` now displays more information in each model's list.
     *   Added the `get_readonly_fields` function to all models, to prevent
     changes in the instances that will NOT be reflected in the Openpay Admin.
-    *   Improved the Charges model.
     *   The **testing** folder was included with some simple configurations to
     experiment with this package.
     *   **MANIFEST.in** was updated to prevent **setuptools** from uploading
@@ -136,13 +160,16 @@ accomplish and what to expect in future versions.
 *   v3.0
     *   **Not released yet**.
     *   This package should have enough security to become **PCI Compliant**
-    by its own. Although this doesn't mean we will save Cards in the system, we
-    must be able to make sensitive transactions from the back-end.
+    by its own. Although this doesn't mean we will save Cards in the system,
+    we must be able to make sensitive transactions from the back-end.
+    *   Use and manage **card points** for Santander, Scotiabank and
+    Bancomer. (This are the only ones allowed by Openpay today).
 
 *   v2.0
     *   **Not released yet**.
-    *   This version will include the features related to managing **Bank
-    Accounts**, **Payouts**, **Charges**, **Fees**, **Transfers**, etc.
+    *   This version will include the features related to managing
+    **Bank Accounts**, **Payouts**, **Charges**, **Fees**, **Transferences**,
+    etc.
     *   Improved **security** through out the system, to prevent the usage
     of the system by malicious users or bots. This will require a better
     understanding of how Django's security works, as well as managing the
@@ -167,16 +194,24 @@ accomplish and what to expect in future versions.
     *   The **Customer** model will be converted to an abstract model. In order
     to be able to connect it to your model User at will, but this would require
     a CustomUser model. I am searching a better way to do this.
-    *   The **Charges Webhook** will be completely connected and tested with the
-    Openpay servers. In this way, we should be able to create Charges from
+    *   The **Webhooks Feature** will be completely connected and tested with
+    the Openpay servers. In this way, we should be able to create Charges from
     Django and/or JavaScript, and be able to see all the recurring charges made
-    automatically by the Openpay system.
+    automatically by the Openpay system. The Verification step of this feature
+    should send an email to the developer so he can confirm the webhook inside
+    the Openpay system, as well.
     *   Django **Internationalization** will be completed for English and
     quite a great part will be translated to Spanish.
     *   **Celery** will start being used to prevent communication bottlenecks
     with the Openpay API
-    *   Pull all the data saved inside Openpay to your database using the
-    command **openpaysync** which will be callable using `manage.py`
+    *   Populate your database with all the data saved inside your Openpay
+    account using the command **openpaysync** by calling it from the
+    `manage.py` file.
+
+Testing
+-------
+
+[![Run in Postman][postman-svg]][postman-pkg]
 
 
 Disclaimer
@@ -207,3 +242,8 @@ Owned and developed by
 [houndci-page]: https://houndci.com/
 [openpay-git]: https://houndci.com/
 [openpay-issue]: https://github.com/open-pay/openpay-python/issues/3
+[requestbin-page]: https://requestb.in/
+[postman-svg]: https://run.pstmn.io/button.svg
+[postman-pkg]: https://app.getpostman.com/run-collection/929685fa23a4a51f1a2f
+
+[webhook-log]: https://github.com/grvty-labs/django-openpay/blob/master/testing/log/webhook.md

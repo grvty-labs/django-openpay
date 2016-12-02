@@ -64,7 +64,7 @@ def validate_request(request):
 
     username, password = ret
 
-    if settings.BASICAUTH_USERS.get(username) != password:
+    if settings.OPENPAY_BASICAUTH_USERS.get(username) != password:
         return None
 
     return username

@@ -28,8 +28,9 @@ OPENPAY_PUBLIC_API_KEY = os.environ.get('OPENPAY_PUBLIC_API_KEY')
 OPENPAY_MERCHANT_ID = os.environ.get('OPENPAY_MERCHANT_ID')
 OPENPAY_DEVICE_ID = os.environ.get('OPENPAY_DEVICE_ID')
 OPENPAY_VERIFY_SSL = False
+OPENPAY_CUSTOMER_MODEL = 'django_openpay.Customer'
 
-BASICAUTH_USERS = {
+OPENPAY_BASICAUTH_USERS = {
   "daniel": "grvtylabs"
 }
 
