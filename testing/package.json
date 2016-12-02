@@ -4,7 +4,43 @@
   "description": "Django OpenPay core dependencies",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "remark ."
+  },
+  "remarkConfig": {
+    "output": true,
+    "presets": [],
+    "plugins": {
+      "lint": {
+        "blockquote-indentation": "consistent",
+        "checkbox-character-style": "consistent",
+        "code-block-style": "'fenced'",
+        "emphasis-marker": "consistent",
+        "fenced-code-marker": "consistent",
+        "heading-style": "consistent",
+        "link-title-style": "consistent",
+        "list-item-content-indent": true,
+        "ordered-list-marker-style": "consistent",
+        "rule-style": "consistent",
+        "strong-marker": "consistent",
+        "table-cell-padding": "consistent",
+        "final-newline": true,
+        "list-item-bullet-indent": true,
+        "list-item-indent": "tab-size",
+        "no-auto-link-without-protocol": true,
+        "no-blockquote-without-caret": true,
+        "no-literal-urls": true,
+        "ordered-list-marker-style": ".",
+        "hard-break-spaces": true,
+        "no-duplicate-definitions": true,
+        "no-heading-content-indent": true,
+        "no-inline-padding": true,
+        "no-shortcut-reference-image": true,
+        "no-shortcut-reference-link": true,
+        "no-undefined-references": true,
+        "no-unused-definitions": true
+      }
+    }
   },
   "repository": {
     "type": "git",
