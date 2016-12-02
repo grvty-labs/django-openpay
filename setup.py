@@ -7,14 +7,14 @@ with open('README.md') as f:
 
 setup(
     name='django-openpay',
-    version='0.1',
+    version='0.2.0',
     description='Django application which integrates the \
 OpenPay libraries for online transactions',
     long_description=readme,
     # long_description=read("README.md"),
     author='GRVTYlabs',
     author_email='daniel.ortiz@grvtylabs.com',
-    url='https://github.com/letops/django-openpay',
+    url='https://github.com/grvty-labs/django-openpay',
     packages=find_packages(),
     # packages=['django_sendgrid_parse'],
     license='MIT',
