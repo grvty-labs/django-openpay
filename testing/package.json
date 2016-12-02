@@ -1,0 +1,84 @@
+{
+  "name": "django-openpay",
+  "version": "0.0.2",
+  "description": "Django OpenPay core dependencies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "remark ."
+  },
+  "remarkConfig": {
+    "output": true,
+    "presets": [],
+    "plugins": {
+      "lint": {
+        "blockquote-indentation": "consistent",
+        "checkbox-character-style": "consistent",
+        "code-block-style": "'fenced'",
+        "emphasis-marker": "consistent",
+        "fenced-code-marker": "consistent",
+        "heading-style": "consistent",
+        "link-title-style": "consistent",
+        "list-item-content-indent": true,
+        "ordered-list-marker-style": "consistent",
+        "rule-style": "consistent",
+        "strong-marker": "consistent",
+        "table-cell-padding": "consistent",
+        "final-newline": true,
+        "list-item-bullet-indent": true,
+        "list-item-indent": "tab-size",
+        "no-auto-link-without-protocol": true,
+        "no-blockquote-without-caret": true,
+        "no-literal-urls": true,
+        "ordered-list-marker-style": ".",
+        "hard-break-spaces": true,
+        "no-duplicate-definitions": true,
+        "no-heading-content-indent": true,
+        "no-inline-padding": true,
+        "no-shortcut-reference-image": true,
+        "no-shortcut-reference-link": true,
+        "no-undefined-references": true,
+        "no-unused-definitions": true
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grvty-labs/django-openpay.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/grvty-labs/django-openpay/issues"
+  },
+  "homepage": "https://github.com/grvty-labs/django-openpay#readme",
+  "devDependencies": {
+    "autoprefixer-loader": "^3.2.0",
+    "axios": "^0.14.0",
+    "babel-core": "^6.17.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-es2015": "^6.16.0",
+    "babel-preset-es2016": "^6.16.0",
+    "babel-preset-react": "^6.16.0",
+    "clean-webpack-plugin": "^0.1.13",
+    "css-loader": "^0.23.1",
+    "deep-equal": "^1.0.1",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "file-loader": "^0.9.0",
+    "jquery": "^3.1.1",
+    "lodash": "^4.16.4",
+    "node-sass": "^3.13.0",
+    "react": "^15.3.2",
+    "react-dom": "^15.3.2",
+    "resolve-url-loader": "^1.4.3",
+    "sass-loader": "^4.0.0",
+    "script-loader": "^0.7.0",
+    "source-list-map": "^0.1.6",
+    "source-map": "^0.5.6",
+    "style-loader": "^0.13.1"
+  },
+  "dependencies": {
+    "webpack": "^1.13.0",
+    "webpack-bundle-tracker": "^0.0.93"
+  }
+}

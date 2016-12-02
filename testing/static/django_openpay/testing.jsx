@@ -8,6 +8,9 @@ ReactDOM.render(
     publicKey={ CONST_OPENPAY_PUBLIC_API_KEY }
     customerID={ CONST_OPENPAY_CUSTOMER_ID }
     sandboxActive={ CONST_OPENPAY_SANDBOX }
+    url={ CONST_DJANGO_CARD_SAVE }
     />,
   document.getElementById('test_me')
 );
+
+//

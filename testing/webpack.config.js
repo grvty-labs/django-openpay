@@ -15,24 +15,26 @@ console.log('PRODUCTION: ' + PROD);
 var entries = {
   // OpenPay_Card_Create: './django_openpay/static/django_openpay/js/openpay_card_creation.jsx',
   // OpenPay_Payout: './django_openpay/static/django_openpay/js/openpay_payout.jsx',
-  Testing: './django_openpay/static/django_openpay/testing.jsx',
+  Testing: './built/django_openpay/testing.jsx',
 };
 
-var outputDir = PROD
-  ? path.join(__dirname, 'webpack', 'prod')
-  : path.join(__dirname, 'webpack', 'dev');
+var outputDir = PROD ?
+    path.join(__dirname, 'webpack', 'production') :
+    path.join(__dirname, 'webpack', 'bundles');
 
 function setCssExt(ext) {
   return ext.replace(/\.js$/, '.css');
 };
 
-var cleanPlugin = new CleanWebpackPlugin(['dev'], {
+var cleanPlugin = new CleanWebpackPlugin(['bundles'], {
   root: path.resolve('./webpack'),
   verbose: true,
   dry: false,
 });
 
-var cssLoaders = ['style', 'css', 'autoprefixer-loader?browsers=last 2 versions'];
+var cssLoaders = PROD ?
+  ['style', 'css?sourceMap', 'autoprefixer-loader?browsers=last 2 versions'] :
+  ['style', 'css', 'autoprefixer-loader?browsers=last 2 versions'];
 var styleModLoaders = [
   { test: /\.scss$/, loaders: cssLoaders.concat([
       'sass?config=sassLoader',
@@ -47,8 +49,10 @@ var styleModLoaders = styleModLoaders.map(function (e) {
 });
 
 var scriptModLoaders = [
-  { test: /\.js$/, exclude: /node_modules/, loader: 'babel' },
-  { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel', query: { presets: ['react'], } },
+  { test: /\.js$/, exclude: /node_modules/, loader: 'babel',
+    query: { presets: ['es2016', 'es2015'], }, },
+  { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel',
+    query: { presets: ['react', 'es2016', 'es2015'], }, },
 ];
 
 var extractPlugin = new ExtractTextPlugin('[name].css', allChunks = true);
@@ -92,6 +96,11 @@ var webpackConfiguration = {
     chunkFilename:  PROD ? '[name].[id].[chunkhash].min.js' : '[name].[id].[chunkhash].js',
   },
 
+  externals: {
+    openpay: 'OpenPay',
+    jquery: 'jQuery',
+  },
+
   plugins: [
     cleanPlugin,
     new webpack.DefinePlugin({
@@ -109,11 +118,6 @@ var webpackConfiguration = {
         : './webpack/django_openpay_dev.json',
     }),
   ],
-
-  externals: {
-    openpay: 'OpenPay',
-    jquery: 'jQuery',
-  },
 
   module: {
     loaders: styleModLoaders.concat(scriptModLoaders).concat([
@@ -151,7 +155,7 @@ var webpackConfiguration = {
 };
 
 if (PROD) {
-  cleanPlugin.paths = ['prod'];
+  cleanPlugin.paths = ['production'];
   cleanPlugin.options = {
     root: path.resolve('./webpack'),
     verbose: true,
