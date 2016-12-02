@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setup(
     name='django-openpay',
-    version='0.2.0',
+    version='0.2.1',
     description='Django application which integrates the \
 OpenPay libraries for online transactions',
     long_description=readme,
