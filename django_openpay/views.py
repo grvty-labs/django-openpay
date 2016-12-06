@@ -47,7 +47,28 @@ def webhook(request):
             'charge.cancelled': webhooks.chargeCancelled,
             'charge.created': webhooks.chargeCreated,
             'charge.succeeded': webhooks.chargeSucceeded
-            # TODO: Add pending webhooks
+            # TODO: Add pending webhooks:
+            # 'charge.failed',
+            # 'charge.rescored.to.decline',
+            # 'subscription.charge.failed',
+            # 'payout.created',
+            # 'payout.succeeded',
+            # 'payout.failed',
+            # 'transfer.succeeded',
+            # 'fee.succeeded',
+            # 'fee.refund.succeeded',
+            # 'spei.received',
+            # 'chargeback.created',
+            # 'chargeback.rejected',
+            # 'chargeback.accepted',
+            # 'order.created',
+            # 'order.activated',
+            # 'order.payment.received',
+            # 'order.completed',
+            # 'order.expired',
+            # 'order.cancelled',
+            # 'order.payment.cancelled',
+
         }
         option = callFunctions.get(body.get('type', ''), None)
 

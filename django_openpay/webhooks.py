@@ -1,75 +1,130 @@
+from django.utils.dateparse import parse_datetime, parse_date
+
+from . import models
+
+
 def verification(body):
-    print(body['id'])
     print(body['verification_code'])
 
 
 def chargeRefunded(body):
-    print(body['transaction']['id'])
-    print(body['transaction']['authorization'])
-    print(body['transaction']['method'])
-    print(body['transaction']['operation_type'])
-    print(body['transaction']['transaction_type'])
-    print(body['transaction']['status'])
-    print(body['transaction']['conciliated'])
-    print(body['transaction']['creation_date'])
-    print(body['transaction']['operation_date'])
-    print(body['transaction']['description'])
-    print(body['transaction']['error_message'])
-    print(body['transaction']['order_id'])
-    print(body['transaction']['customer_id'])
-    print(body['transaction']['amount'])
-    print(body['transaction']['currency'])
+    transaction = body['transaction']
+    customer = models.Customer.objects.get(
+        openpay_id=transaction['customer_id'])
+    card = models.Card.objects.get(
+        openpay_id=transaction['card']['id'])
+    charge, created = models.Charge.objects.update_or_create(
+        openpay_id=transaction['id'],
+        defaults={
+            'authorization': transaction['authorization'],
+            'method': transaction['method'],
+            'operation_type': transaction['operation_type'],
+            'transaction_type': transaction['transaction_type'],
+            'status': transaction['status'],
+            'conciliated': transaction['conciliated'],
+            'creation_date': parse_datetime(transaction['creation_date']),
+            'operation_date': parse_datetime(transaction['operation_date']),
+            'description': transaction['description'],
+            'error_message': transaction['error_message'],
+            'order_id': transaction['order_id'],
+            'amount': transaction['amount'],
+            'currency': transaction['currency'],
+            'customer': customer,
+            'card': card,
+        })
+
+    transaction = transaction['refund']
+    refund, created = models.Refund.objects.update_or_create(
+        openpay_id=transaction['id'],
+        defaults={
+            'authorization': transaction['authorization'],
+            'method': transaction['method'],
+            'operation_type': transaction['operation_type'],
+            'transaction_type': transaction['transaction_type'],
+            'status': transaction['status'],
+            'conciliated': transaction['conciliated'],
+            'creation_date': parse_datetime(transaction['creation_date']),
+            'operation_date': parse_datetime(transaction['operation_date']),
+            'description': transaction['description'],
+            'error_message': transaction['error_message'],
+            'order_id': transaction['order_id'],
+            'amount': transaction['amount'],
+            'currency': transaction['currency'],
+            'customer': customer,
+            'charge': charge,
+        })
 
 
 def chargeCancelled(body):
-    print(body['transaction']['id'])
-    print(body['transaction']['authorization'])
-    print(body['transaction']['method'])
-    print(body['transaction']['operation_type'])
-    print(body['transaction']['transaction_type'])
-    print(body['transaction']['status'])
-    print(body['transaction']['conciliated'])
-    print(body['transaction']['creation_date'])
-    print(body['transaction']['operation_date'])
-    print(body['transaction']['description'])
-    print(body['transaction']['error_message'])
-    print(body['transaction']['order_id'])
-    print(body['transaction']['customer_id'])
-    print(body['transaction']['amount'])
-    print(body['transaction']['currency'])
+    transaction = body['transaction']
+    charge, created = models.Charge.objects.update_or_create(
+        openpay_id=transaction['id'],
+        defaults={
+            'authorization': transaction['authorization'],
+            'method': transaction['method'],
+            'operation_type': transaction['operation_type'],
+            'transaction_type': transaction['transaction_type'],
+            'status': transaction['status'],
+            'conciliated': transaction['conciliated'],
+            'creation_date': parse_datetime(transaction['creation_date']),
+            'operation_date': parse_datetime(transaction['operation_date']),
+            'description': transaction['description'],
+            'error_message': transaction['error_message'],
+            'order_id': transaction['order_id'],
+            'amount': transaction['amount'],
+            'currency': transaction['currency'],
+            'customer': models.Customer.objects.get(
+                openpay_id=transaction['customer_id']),
+            'card': models.Card.objects.get(
+                openpay_id=transaction['card']['id'])
+        })
 
 
 def chargeCreated(body):
-    print(body['transaction']['id'])
-    print(body['transaction']['authorization'])
-    print(body['transaction']['method'])
-    print(body['transaction']['operation_type'])
-    print(body['transaction']['transaction_type'])
-    print(body['transaction']['status'])
-    print(body['transaction']['conciliated'])
-    print(body['transaction']['creation_date'])
-    print(body['transaction']['operation_date'])
-    print(body['transaction']['description'])
-    print(body['transaction']['error_message'])
-    print(body['transaction']['order_id'])
-    print(body['transaction']['customer_id'])
-    print(body['transaction']['amount'])
-    print(body['transaction']['currency'])
+    transaction = body['transaction']
+    charge, created = models.Charge.objects.update_or_create(
+        openpay_id=transaction['id'],
+        defaults={
+            'authorization': transaction['authorization'],
+            'method': transaction['method'],
+            'operation_type': transaction['operation_type'],
+            'transaction_type': transaction['transaction_type'],
+            'status': transaction['status'],
+            'conciliated': transaction['conciliated'],
+            'creation_date': parse_datetime(transaction['creation_date']),
+            'operation_date': parse_datetime(transaction['operation_date']),
+            'description': transaction['description'],
+            'error_message': transaction['error_message'],
+            'order_id': transaction['order_id'],
+            'amount': transaction['amount'],
+            'currency': transaction['currency'],
+            'customer': models.Customer.objects.get(
+                openpay_id=transaction['customer_id']),
+            'card': models.Card.objects.get(
+                openpay_id=transaction['card']['id'])
+        })
 
 
 def chargeSucceeded(body):
-    print(body['transaction']['id'])
-    print(body['transaction']['authorization'])
-    print(body['transaction']['method'])
-    print(body['transaction']['operation_type'])
-    print(body['transaction']['transaction_type'])
-    print(body['transaction']['status'])
-    print(body['transaction']['conciliated'])
-    print(body['transaction']['creation_date'])
-    print(body['transaction']['operation_date'])
-    print(body['transaction']['description'])
-    print(body['transaction']['error_message'])
-    print(body['transaction']['order_id'])
-    print(body['transaction']['customer_id'])
-    print(body['transaction']['amount'])
-    print(body['transaction']['currency'])
+    transaction = body['transaction']
+    charge, created = models.Charge.objects.update_or_create(
+        openpay_id=transaction['id'],
+        defaults={
+            'authorization': transaction['authorization'],
+            'method': transaction['method'],
+            'operation_type': transaction['operation_type'],
+            'transaction_type': transaction['transaction_type'],
+            'status': transaction['status'],
+            'conciliated': transaction['conciliated'],
+            'creation_date': parse_datetime(transaction['creation_date']),
+            'operation_date': parse_datetime(transaction['operation_date']),
+            'description': transaction['description'],
+            'error_message': transaction['error_message'],
+            'order_id': transaction['order_id'],
+            'amount': transaction['amount'],
+            'currency': transaction['currency'],
+            'customer': models.Customer.objects.get(
+                openpay_id=transaction['customer_id']),
+            'card': models.Card.objects.get(
+                openpay_id=transaction['card']['id'])
+        })
