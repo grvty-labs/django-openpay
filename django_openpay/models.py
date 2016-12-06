@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.fields.related import ManyToManyField
@@ -9,11 +10,14 @@ from decimal import Decimal
 
 from . import openpay, hardcode, ugettext_lazy, exceptions
 
+
 phone_validator = RegexValidator(
     regex=r'^\d{9,15}$',
     message=ugettext_lazy("The telephone number can only contain digits. "
                           " The maximum number of digits is 15.")
 )
+
+CustomerModel = settings.OPENPAY_CUSTOMER_MODEL
 
 
 class AbstractOpenpayBase(models.Model):
@@ -113,7 +117,7 @@ class Address(AbstractOpenpayBase):
         return data
 
 
-class Customer(AbstractOpenpayBase):
+class AbstractCustomer(AbstractOpenpayBase):
     first_name = models.CharField(
         max_length=60,
         blank=False,
@@ -139,8 +143,10 @@ class Customer(AbstractOpenpayBase):
         blank=False,
         null=False,
         related_name='customer',
-        verbose_name=ugettext_lazy('Address')
-    )
+        verbose_name=ugettext_lazy('Address'))
+
+    class Meta:
+        abstract = True
 
     @classmethod
     def get_readonly_fields(self, instance=None):
@@ -200,14 +206,14 @@ class Customer(AbstractOpenpayBase):
         return self.full_name
 
 
-@receiver(pre_save, sender=Customer)
+@receiver(pre_save, sender=CustomerModel)
 def customer_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     instance.email = instance.email.strip()
     instance.push()
 
 
-@receiver(post_delete, sender=Customer)
+@receiver(post_delete, sender=CustomerModel)
 def customer_postdelete(sender, instance, **kwargs):
     instance.remove()
 
@@ -244,7 +250,7 @@ class Card(AbstractOpenpayBase):
         null=False,
         verbose_name=ugettext_lazy('Expiration year'))
     customer = models.ForeignKey(
-        Customer,
+        CustomerModel,
         blank=False,
         null=False,
         related_name='cards',
@@ -447,7 +453,7 @@ def plan_postdelete(sender, instance, **kwargs):
 
 class Subscription(AbstractOpenpayBase):
     customer = models.ForeignKey(
-        Customer,
+        CustomerModel,
         blank=False,
         null=False,
         related_name='subscriptions',

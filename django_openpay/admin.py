@@ -1,5 +1,8 @@
 from django.contrib import admin
 from . import models, ugettext
+from .utils import get_customer_model
+
+CustomerModel = get_customer_model()
 
 
 # Register your models here.
@@ -13,9 +16,9 @@ class AddressAdmin(admin.ModelAdmin):
         return models.Address.get_readonly_fields(obj)
 
 
-@admin.register(models.Customer)
+@admin.register(CustomerModel)
 class CustomerAdmin(admin.ModelAdmin):
-    model = models.Customer
+    model = CustomerModel
     list_display = ('openpay_id', 'first_name', 'last_name', 'email',
                     'phone_number', 'creation_date')
 
@@ -52,6 +55,16 @@ class SubscriptionAdmin(admin.ModelAdmin):
         return models.Subscription.get_readonly_fields(obj)
 
 
+@admin.register(models.Refund)
+class RefundAdmin(admin.ModelAdmin):
+    model = models.Refund
+    list_display = ('openpay_id', 'customer', 'charge', 'amount',
+                    'creation_date')
+
+    def get_readonly_fields(self, request, obj=None):
+        return models.Refund.get_readonly_fields(obj)
+
+
 @admin.register(models.Charge)
 class ChargeAdmin(admin.ModelAdmin):
     model = models.Charge
@@ -62,7 +75,7 @@ class ChargeAdmin(admin.ModelAdmin):
     def capture(self, request, queryset):
         captured = 0
         for charge in queryset:
-            charge.capture()
+            charge.capture_charge()
             captured = captured + 1
         if captured == 1:
             message_bit = "1 charge was"
@@ -77,7 +90,7 @@ class ChargeAdmin(admin.ModelAdmin):
     def refund(self, request, queryset):
         refunded = 0
         for charge in queryset:
-            charge.refund()
+            charge.refund_charge()
             refunded = refunded + 1
         if refunded == 1:
             message_bit = "1 charge was"

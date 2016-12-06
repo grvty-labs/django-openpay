@@ -1,12 +1,32 @@
 # Obtained and edited from:
 # https://goo.gl/0lW3Di
-
+from django.apps import apps as django_apps
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpResponse
 
 import base64
 import binascii
 from urllib.parse import unquote_plus
+
+from . import ugettext_lazy
+
+
+def get_customer_model():
+    """
+    Returns the Customer model that is active in this project.
+    """
+    try:
+        return django_apps.get_model(settings.OPENPAY_CUSTOMER_MODEL)
+    except ValueError:
+        raise ImproperlyConfigured(
+            "OPENPAY_CUSTOMER_MODEL must be of the form 'app_label.model_name'"
+        )
+    except LookupError:
+        raise ImproperlyConfigured(
+            "OPENPAY_CUSTOMER_MODEL refers to model '%s' "
+            "that has not been installed" % settings.OPENPAY_CUSTOMER_MODEL
+        )
 
 
 class HttpResponseUnauthorized(HttpResponse):
