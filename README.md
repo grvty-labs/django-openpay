@@ -8,11 +8,12 @@ Django app for online transactions
 payments using debit/credit cards or bank transferences. Openpay allows to
 create Plans for system memberships, with an autocharge system.
 
-Django-Openpay is a django application which integrates two Openpay
+Django-Openpay is a django application created to wrap the current library of
+[Openpay for Python][openpay-git]. Django-Openpay integrates two Openpay
 libraries:
 
 *   The Python library to manage Plans, Charges, Subscriptions, Customers and
-Cards (partially) from the django models.
+Cards (partially) directly through django models.
 
 *   The JavaScript library to manage payouts, transfers and cards without
 saving sensitive information in your django application. (Giving us the relief
@@ -36,8 +37,11 @@ Features
 3.  Create from JSX into Openpay:
     *   Cards
 
-4.  Reflect through webhooks from Openpay into Django:
+4.  Reflect updates through webhooks from Openpay into Django:
     *   Charges
+
+5.  Refund or Capture Charges.
+
 
 Installation
 ------------
@@ -72,7 +76,14 @@ OPENPAY_PUBLIC_API_KEY='string'
 OPENPAY_MERCHANT_ID='string'
 OPENPAY_VERIFY_SSL=True  # or False
 OPENPAY_DEVICE_ID='string'
+OPENPAY_CUSTOMER_MODEL='string'
 ```
+
+The `AbstractCustomer` model is a model which can be inherited from. This was
+done because you may want to make your `User` model the customer, or manage a
+team of users as one customer. It is up to you, just remember to use all the
+fields described in the abstract, or (in case you want to rename the fields)
+set them to `None` and overwrite the `pull` and `push` methods.
 
 In order to be able to use the Webhooks feature, you need to link your Openpay
 project to a specific url of your project (which calls the
@@ -90,128 +101,22 @@ OPENPAY_BASICAUTH_USERS = {
 }
 ```
 
-Versions Released
------------------
-
-*   v0.3.0
-    *   **Not released yet**
-    *   Added the reception and interpretation of the information received from
-    Openpay through their **webhook**. A [Postman project][postman-pkg] has
-    been created for local testing. [RequestBin][requestbin-page] was used to
-    generate a [log][webhook-log] from which the Postman project was created.
-
-
-*   v0.2.0
-    *   **This version is not 100% compatible with the previous version**. This
-    is because we had to modify, rename and add some of the models' fields.
-    If you are using this package and you are not calling explicitly some of
-    the fields, you should have no problem.
-    *   Renamed `code` field to `openpay_id` in all models.
-    *   All models now inherit from the `AbstractOpenpayBase` model to generate
-    the code contracts across the models.
-    *   Added the functions of `push`, `pull`, `retrieve` and `remove` to
-    manage the communication with Openpay.
-    *   Fixed the aspect of internationalization using `ugettext` and
-    `ugettext_lazy`.
-    *   Moved the functionality from the `save` function in all models to their
-    corresponding signal. (In order to prevent errors from the `save`
-    overwrite).
-    *   Moved the functionality from the `delete` function in all models to
-    their corresponding signal. (In order to prevent errors from the `delete`
-    overwrite).
-    *   New **exception types** added.
-    *   Added the `OPENPAY_DEVICE_ID` variable to the settings, so we can
-    create simple Charges from the Django Admin (using only Cards that were
-    created previusly using tokens).
-    *   The `django-admin` now displays more information in each model's list.
-    *   Added the `get_readonly_fields` function to all models, to prevent
-    changes in the instances that will NOT be reflected in the Openpay Admin.
-    *   The **testing** folder was included with some simple configurations to
-    experiment with this package.
-    *   **MANIFEST.in** was updated to prevent **setuptools** from uploading
-    trash.
-    *   This package's pull requests are now being checked by
-    [Hound][houndci-page], please respect the code standards that will be set
-    in the **.hound.yml** file.
-
-
-*   v0.1
-    *   Created the initial connections to the Openpay API.
-    *   Create directly from Django into Openpay:
-        *   Customers
-        *   Plans
-        *   Subscriptions
-    *   Delete directly from Django into Openpay:
-        *   Customers
-        *   Plans
-        *   Subscriptions
-        *   Cards
-    *   Create from JSX into Openpay:
-        *   Cards
-    *   Reflect through webhooks from Openpay into Django:
-        *   Charges (Pending tests)
-
-
-Milestones
-----------
-This milestones are merely a map to inform everyone what we are trying to
-accomplish and what to expect in future versions.
-
-*   v3.0
-    *   **Not released yet**.
-    *   This package should have enough security to become **PCI Compliant**
-    by its own. Although this doesn't mean we will save Cards in the system,
-    we must be able to make sensitive transactions from the back-end.
-    *   Use and manage **card points** for Santander, Scotiabank and
-    Bancomer. (This are the only ones allowed by Openpay today).
-
-*   v2.0
-    *   **Not released yet**.
-    *   This version will include the features related to managing
-    **Bank Accounts**, **Payouts**, **Charges**, **Fees**, **Transferences**,
-    etc.
-    *   Improved **security** through out the system, to prevent the usage
-    of the system by malicious users or bots. This will require a better
-    understanding of how Django's security works, as well as managing the
-    anti-fraud system used by Openpay.
-    *   Rewrite of the **openpay-python** [library][openpay-git]. This is
-    because the last modification of the same library was in 2014, and even
-    though that package is really helpful for plain python, it was not improved
-    throughout the years. We have the theory that the API used by Openpay was
-    developed at the same time as the python and javascript official libraries,
-    but only the javascript library has been maintained and improved with the
-    new changes to the API. This cripples in a way the python package, which
-    can be clearly seen in the API's operations which require the
-    `device_session_id` value. Please refer to the created
-    [issue][openpay-issue] to know more about the problems detected.
-
-
-*   v1.0
-    *   **Not released yet**.
-    *   This version will be considered our **first stable version**. This
-    means that the models will not have significant changes made to their
-    fields. Although the functionality can be greatly improved or modified.
-    *   The **Customer** model will be converted to an abstract model. In order
-    to be able to connect it to your model User at will, but this would require
-    a CustomUser model. I am searching a better way to do this.
-    *   The **Webhooks Feature** will be completely connected and tested with
-    the Openpay servers. In this way, we should be able to create Charges from
-    Django and/or JavaScript, and be able to see all the recurring charges made
-    automatically by the Openpay system. The Verification step of this feature
-    should send an email to the developer so he can confirm the webhook inside
-    the Openpay system, as well.
-    *   Django **Internationalization** will be completed for English and
-    quite a great part will be translated to Spanish.
-    *   **Celery** will start being used to prevent communication bottlenecks
-    with the Openpay API
-    *   Populate your database with all the data saved inside your Openpay
-    account using the command **openpaysync** by calling it from the
-    `manage.py` file.
 
 Testing
 -------
 
 [![Run in Postman][postman-svg]][postman-pkg]
+
+
+
+Other docs
+----------
+
+*   [Changelog][changelog]
+*   [Milestones][milestones]
+*   [Webhook log][webhook-log]
+*   [LICENSE][license]
+
 
 
 Disclaimer
@@ -226,10 +131,13 @@ from the Openpay servers by using access tokens.
 not have an SSL certificate preconfiguration, this is the reason behind our
 decision to be able to create cards only in the front-end.
 
+
+
 Owned and developed by
 --------
 
 [![StackShare][stack-shield]][stack-tech]
+
 
 [![GRVTYlabs][logo]](www.grvtylabs.com)
 
@@ -237,13 +145,13 @@ Owned and developed by
 [stack-shield]: http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat
 [stack-tech]: http://stackshare.io/letops/grvtylabs
 
+[openpay-git]: https://github.com/open-pay/openpay-python/
 [openpay-page]: http://www.openpay.mx/en/
 [pci-wiki-page]: https://en.wikipedia.org/wiki/Payment_Card_Industry_Data_Security_Standard
-[houndci-page]: https://houndci.com/
-[openpay-git]: https://houndci.com/
-[openpay-issue]: https://github.com/open-pay/openpay-python/issues/3
-[requestbin-page]: https://requestb.in/
 [postman-svg]: https://run.pstmn.io/button.svg
 [postman-pkg]: https://app.getpostman.com/run-collection/929685fa23a4a51f1a2f
 
-[webhook-log]: https://github.com/grvty-labs/django-openpay/blob/master/testing/log/webhook.md
+[changelog]: https://github.com/grvty-labs/django-openpay/blob/master/docs/Changelog.md
+[milestones]: https://github.com/grvty-labs/django-openpay/blob/master/docs/Milestones.md
+[webhook-log]: https://github.com/grvty-labs/django-openpay/blob/master/docs/log/webhook.md
+[license]: https://github.com/grvty-labs/django-openpay/blob/master/LICENSE

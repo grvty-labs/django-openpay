@@ -2,6 +2,7 @@ include README.md
 include LICENSE
 graft django_openpay
 prune django_openpay_repo
+prune docs
 prune bin
 prune built
 prune include
