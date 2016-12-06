@@ -269,17 +269,45 @@ plan_repeatunit = (
     (plan_repeatunit_year, ugettext_lazy('Year')),
 )
 
-charge_method_card = 'card'
-charge_method_store = 'store'
-charge_method_bank = 'bank_account'
-charge_method = (
-    (charge_method_card, ugettext_lazy('Card')),
-    # (charge_method_store, ugettext_lazy('Store')),
-    # (charge_method_bank, ugettext_lazy('Bank Account')),
+transaction_ttype_fee = 'fee'
+transaction_ttype_charge = 'charge'
+transaction_ttype_payout = 'payout'
+transaction_ttype_transfer = 'transfer'
+transaction_ttype = (
+    (transaction_ttype_charge, ugettext_lazy('Charge')),
+    # TODO: Activate when models are created
+    # (transaction_ttype_fee, ugettext_lazy('Fee')),
+    # (transaction_ttype_payout, ugettext_lazy('Payout')),
+    # (transaction_ttype_transfer, ugettext_lazy('Transfer')),
 )
-charge_currency_mxn = 'MXN'
-charge_currency_usd = 'USD'
-charge_currency = (
-    (charge_currency_mxn, ugettext_lazy('MXN')),
-    (charge_currency_usd, ugettext_lazy('USD')),
+transaction_otype_in = 'in'
+transaction_otype_out = 'out'
+transaction_otype = (
+    (transaction_otype_in, ugettext_lazy('In')),
+    (transaction_otype_out, ugettext_lazy('Out')),
+)
+transaction_method_card = 'card'
+transaction_method_bank = 'bank'
+transaction_method_customer = 'customer'
+transaction_method_store = 'store'
+transaction_method_bankaccount = 'bank_account'
+transaction_method = (
+    (transaction_method_card, ugettext_lazy('Card')),
+    # TODO: Activate when models are created
+    # (transaction_method_store, ugettext_lazy('Store')),
+    # (transaction_method_bank, ugettext_lazy('Bank Account')),
+)
+transaction_status_completed = 'completed'
+transaction_status_inprogress = 'in_progress'
+transaction_status_failed = 'failed'
+transaction_status = (
+    (transaction_status_completed, ugettext_lazy('Completed')),
+    (transaction_status_inprogress, ugettext_lazy('In Progress')),
+    (transaction_status_failed, ugettext_lazy('Failed')),
+)
+transaction_currency_mxn = 'MXN'
+transaction_currency_usd = 'USD'
+transaction_currency = (
+    (transaction_currency_mxn, ugettext_lazy('MXN')),
+    (transaction_currency_usd, ugettext_lazy('USD')),
 )
