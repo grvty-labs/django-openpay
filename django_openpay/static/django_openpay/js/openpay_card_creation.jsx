@@ -179,7 +179,7 @@ var OpenPayCardCreate = React.createClass({
           complete: function (xhr, status) {
             this.setState({ sending: false, });
             console.log('Completed');
-          },
+          }.bind(this),
         });
       }.bind(this),
 

@@ -26,15 +26,21 @@ function setCssExt(ext) {
   return ext.replace(/\.js$/, '.css');
 };
 
-var cleanPlugin = new CleanWebpackPlugin(['bundles'], {
-  root: path.resolve('./webpack'),
-  verbose: true,
-  dry: false,
-});
+var cleanPlugin = PROD
+  ? new CleanWebpackPlugin(['production'], {
+    root: path.resolve('./webpack'),
+    verbose: true,
+    dry: false,
+  })
+  : new CleanWebpackPlugin(['bundles'], {
+    root: path.resolve('./webpack'),
+    verbose: true,
+    dry: false,
+  });
 
 var cssLoaders = PROD ?
-  ['style', 'css?sourceMap', 'autoprefixer-loader?browsers=last 2 versions'] :
-  ['style', 'css', 'autoprefixer-loader?browsers=last 2 versions'];
+  ['style', 'css', 'autoprefixer-loader?browsers=last 2 versions'] :
+  ['style', 'css?sourceMap', 'autoprefixer-loader?browsers=last 2 versions'];
 var styleModLoaders = [
   { test: /\.scss$/, loaders: cssLoaders.concat([
       'sass?config=sassLoader',
@@ -55,7 +61,8 @@ var scriptModLoaders = [
     query: { presets: ['react', 'es2016', 'es2015'], }, },
 ];
 
-var extractPlugin = new ExtractTextPlugin('[name].css', allChunks = true);
+var extractPlugin = new ExtractTextPlugin(
+  PROD ? '[name]-[hash].css' : '[name].css', allChunks = true);
 
 var generateManifestPlugin = function (compiler) {
   return this.plugin('done', function (stats) {
@@ -85,9 +92,9 @@ var generateManifestPlugin = function (compiler) {
 var webpackConfiguration = {
   target: 'web',
   cache: true,
-  debug: true,
+  debug: !PROD,
   watch: false,
-  devtool: 'source-map',
+  devtool: PROD ? null : 'source-map',
 
   entry: entries,
   output: {
@@ -143,7 +150,7 @@ var webpackConfiguration = {
   sassLoader: {
     precision: 10,
     outputStyle: 'expanded',
-    sourceMap: true,
+    sourceMap: !PROD,
     includePaths: [
       'node_modules/bootstrap-sass',
       'node_modules/breakpoint-sass/stylesheets',
@@ -155,16 +162,6 @@ var webpackConfiguration = {
 };
 
 if (PROD) {
-  cleanPlugin.paths = ['production'];
-  cleanPlugin.options = {
-    root: path.resolve('./webpack'),
-    verbose: true,
-    dry: false,
-  };
-  extractPlugin.filename = '[name]-[hash].css';
-  webpackConfiguration.debug = false;
-  webpackConfiguration.watch = false;
-  webpackConfiguration.devtool = null;
   webpackConfiguration.plugins.push(
     new webpack.optimize.OccurenceOrderPlugin(true),
     new webpack.optimize.UglifyJsPlugin({
