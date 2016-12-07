@@ -19,6 +19,9 @@ package.
     *   Stopped using **Openpay-python** because it had way too many bugs when
     working with Charges. We forked the project and fixed the bugs. Can be
     found in `pip` as `OpenpayGrvty`.
+    *   All the **migrations** have been deleted. This is due to the change
+    in the `Customer` model, from a hard model to an `abstract` one (now known
+    as `AbstractCustomer`).
 
 
 *   v0.2.1

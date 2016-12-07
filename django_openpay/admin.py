@@ -16,16 +16,6 @@ class AddressAdmin(admin.ModelAdmin):
         return models.Address.get_readonly_fields(obj)
 
 
-@admin.register(CustomerModel)
-class CustomerAdmin(admin.ModelAdmin):
-    model = CustomerModel
-    list_display = ('openpay_id', 'first_name', 'last_name', 'email',
-                    'phone_number', 'creation_date')
-
-    def get_readonly_fields(self, request, obj=None):
-        return models.Customer.get_readonly_fields(obj)
-
-
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
     model = models.Card

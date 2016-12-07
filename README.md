@@ -85,6 +85,11 @@ team of users as one customer. It is up to you, just remember to use all the
 fields described in the abstract, or (in case you want to rename the fields)
 set them to `None` and overwrite the `pull` and `push` methods.
 
+Then you will have to run the `python manage.py makemigrations` command. This
+is necessary due to the problem that there is no default `Customer` model,
+until you inherit from the `AbstractCustomer` and declare it inside the
+settings.py variable `OPENPAY_CUSTOMER_MODEL`.
+
 In order to be able to use the Webhooks feature, you need to link your Openpay
 project to a specific url of your project (which calls the
 `'django_openpay.views.webhook'` view), inside the Openpay system. Remember

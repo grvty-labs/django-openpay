@@ -1,18 +1,8 @@
 include README.md
 include LICENSE
 graft django_openpay
-prune django_openpay_repo
-prune docs
-prune bin
-prune built
-prune include
-prune lib
-prune node_modules
-prune testing
-prune webpack
 
-prune db.sqlite3
-prune manage.py
-prune package.json
-prune requirements.txt
-prune webpack.config.js
+exclude django_openpay_repo*
+recursive-exclude * __pycache__
+recursive-exclude * *.pyc
+recursive-exclude * *.pyo
