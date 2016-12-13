@@ -118,6 +118,8 @@ media/defaults/*.png.*
 !.elasticbeanstalk/*.global.yml
 
 # REPO
+django_openpay/migrations/*
+!django_openpay/migrations/__init__.py
 django_openpay_repo/
 /manage.py
 /package.json
