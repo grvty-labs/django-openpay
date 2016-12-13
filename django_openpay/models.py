@@ -53,7 +53,7 @@ class AbstractOpenpayBase(models.Model):
         raise NotImplementedError
 
 
-class Address(AbstractOpenpayBase):
+class Address(models.Model):
     city = models.TextField(
         blank=False,
         null=False,
@@ -95,8 +95,8 @@ class Address(AbstractOpenpayBase):
     @classmethod
     def get_readonly_fields(self, instance=None):
         if instance:
-            return ['openpay_id', 'creation_date']
-        return ['openpay_id', 'creation_date']
+            return ['creation_date']
+        return ['creation_date']
 
     # Obtained and edited from:
     # https://goo.gl/SqkLbo
@@ -112,7 +112,7 @@ class Address(AbstractOpenpayBase):
                     data[f.name] = list(
                         f.value_from_object(self).values_list('pk', flat=True)
                     )
-            elif f.name not in ['id', 'creation_date', 'openpay_id']:
+            elif f.name not in ['id', 'creation_date']:
                 data[f.name] = f.value_from_object(self)
         return data
 
