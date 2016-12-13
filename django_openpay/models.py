@@ -43,7 +43,7 @@ class AbstractOpenpayBase(models.Model):
     def push(self):
         raise NotImplementedError
 
-    def pull(self):
+    def pull(self, commit=False):
         raise NotImplementedError
 
     def retrieve(self):
@@ -175,7 +175,7 @@ class AbstractCustomer(AbstractOpenpayBase):
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
         self.first_name = self._openpay.name
         self.last_name = self._openpay.last_name
@@ -183,6 +183,8 @@ class AbstractCustomer(AbstractOpenpayBase):
         self.phone_number = self._openpay.phone_number
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if self.openpay_id:
@@ -287,7 +289,7 @@ class Card(AbstractOpenpayBase):
     def push(self):
         raise NotImplementedError
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
         self.card_type = self._openpay.type
         self.holder = self._openpay.holder_name
@@ -296,6 +298,8 @@ class Card(AbstractOpenpayBase):
         self.year = self._openpay.expiration_year[-2:]
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if not self.customer or not self.customer.openpay_id:
@@ -411,7 +415,7 @@ class Plan(AbstractOpenpayBase):
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
         self.name = self._openpay.name
         self.amount = Decimal(self._openpay.amount)
@@ -422,6 +426,8 @@ class Plan(AbstractOpenpayBase):
         self.repeat_every = self._openpay.repeat_every
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if self.openpay_id:
@@ -517,7 +523,7 @@ class Subscription(AbstractOpenpayBase):
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
         self.trial_end_date = parse_date(
             self._openpay.trial_end_date)
@@ -525,6 +531,8 @@ class Subscription(AbstractOpenpayBase):
             self._openpay.cancel_at_period_end
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if not self.customer or not self.customer.openpay_id:
@@ -704,11 +712,11 @@ class Charge(AbstractTransaction):
                 currency=self.currency,
                 description=self.description,
                 device_session_id=openpay.device_id,
-                capture=False)
+                capture=True)
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         # TODO: Pull Customer and Card
         self.retrieve()
         self.authorization = self._openpay.authorization
@@ -726,6 +734,8 @@ class Charge(AbstractTransaction):
         self.currency = self._openpay.currency
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if not self.customer or not self.customer.openpay_id:
