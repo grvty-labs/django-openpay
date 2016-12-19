@@ -22,6 +22,30 @@ package.
     *   All the **migrations** have been deleted. This is due to the change
     in the `Customer` model, from a hard model to an `abstract` one (now known
     as `AbstractCustomer`).
+    *   Improved the `Subscription` model. Previously this model didn't save
+    the status of the subscriptions, because we thought that this would be
+    available through the Openpay system's webhooks. But I was wrong. Now, to
+    be able to see the subscription state and update it constantly, it is
+    required to activate a **Celery** worker and beater. Thankfully you can
+    check the *\_\_init\_\_.py* and the *celery.py* files in the *testing*
+    folder. Bonus: I recommend you to use this nice Celery tutorial to
+    better understand what it is needed, how we did it and how you can
+    improve it: [here][celery-tutorial].
+    *   If you started using our library before this point we recommend you to:
+    Uninstall this library, uninstall the openpay library and reinstall
+    everything without using cache. (If you are using pip, this shouldn't
+    delete your migrations, so you don't have to worry about those). This fix
+    is related to the fork we had to do from the Openpay's official library and
+    how the namespaces collide with our fork.
+
+
+*   v0.2.x > v0.2.1
+    *   Only one **MAJOR** change. Stopped using the Openpay's official python
+    library, forked it and started using our changes. This was because the
+    official library has not been maintained in the last 3 years, they don't
+    answer to the issues and we detected multiple (stupid) errors.
+    *   Installation tests. Nothing really important, but there were several
+    changes to the Milestones, Readme, Manifest, etc.
 
 
 *   v0.2.1
@@ -99,3 +123,6 @@ Owned and developed by
 [houndci-page]: https://houndci.com/
 [requestbin-page]: https://requestb.in/
 [webhook-log]: https://github.com/grvty-labs/django-openpay/blob/master/docs/log/webhook.md
+
+
+[celery-tutorial]: https://realpython.com/blog/python/asynchronous-tasks-with-django-and-celery/

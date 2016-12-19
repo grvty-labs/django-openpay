@@ -19,8 +19,24 @@ class AddressAdmin(admin.ModelAdmin):
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
     model = models.Card
-    list_display = ('openpay_id', 'alias', 'holder', 'customer',
+    actions = ['pull', ]
+    list_display = ('pk', 'openpay_id', 'alias', 'holder', 'customer',
                     'creation_date')
+
+    def pull(self, request, queryset):
+        pulled = 0
+        for instance in queryset:
+            instance.pull(commit=True)
+            pulled = pulled + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % pulled
+        self.message_user(
+            request,
+            "%s successfully pulled." % message_bit
+        )
+    pull.short_description = ugettext('Pull selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Card.get_readonly_fields(obj)
@@ -29,8 +45,24 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(models.Plan)
 class PlanAdmin(admin.ModelAdmin):
     model = models.Plan
-    list_display = ('openpay_id', 'name', 'amount', 'repeat_every',
+    actions = ['pull', ]
+    list_display = ('name', 'openpay_id', 'amount', 'repeat_every',
                     'repeat_unit', 'creation_date')
+
+    def pull(self, request, queryset):
+        pulled = 0
+        for instance in queryset:
+            instance.pull(commit=True)
+            pulled = pulled + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % pulled
+        self.message_user(
+            request,
+            "%s successfully pulled." % message_bit
+        )
+    pull.short_description = ugettext('Pull selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Plan.get_readonly_fields(obj)
@@ -39,7 +71,24 @@ class PlanAdmin(admin.ModelAdmin):
 @admin.register(models.Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     model = models.Subscription
-    list_display = ('openpay_id', 'customer', 'plan', 'card', 'creation_date')
+    actions = ['pull', ]
+    list_display = ('pk', 'openpay_id', 'customer', 'plan', 'card',
+                    'creation_date')
+
+    def pull(self, request, queryset):
+        pulled = 0
+        for instance in queryset:
+            instance.pull(commit=True)
+            pulled = pulled + 1
+        if pulled == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % pulled
+        self.message_user(
+            request,
+            "%s successfully pulled." % message_bit
+        )
+    pull.short_description = ugettext('Pull selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Subscription.get_readonly_fields(obj)
@@ -48,8 +97,24 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(models.Refund)
 class RefundAdmin(admin.ModelAdmin):
     model = models.Refund
-    list_display = ('openpay_id', 'customer', 'charge', 'amount',
+    actions = ['pull', ]
+    list_display = ('pk', 'openpay_id', 'customer', 'charge', 'amount',
                     'creation_date')
+
+    def pull(self, request, queryset):
+        pulled = 0
+        for instance in queryset:
+            instance.pull(commit=True)
+            pulled = pulled + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % pulled
+        self.message_user(
+            request,
+            "%s successfully pulled." % message_bit
+        )
+    pull.short_description = ugettext('Pull selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Refund.get_readonly_fields(obj)
@@ -58,9 +123,24 @@ class RefundAdmin(admin.ModelAdmin):
 @admin.register(models.Charge)
 class ChargeAdmin(admin.ModelAdmin):
     model = models.Charge
-    actions = ['capture', 'refund']
-    list_display = ('openpay_id', 'customer', 'card', 'amount',
+    actions = ['pull', 'capture', 'refund']
+    list_display = ('pk', 'openpay_id', 'customer', 'card', 'amount',
                     'creation_date')
+
+    def pull(self, request, queryset):
+        pulled = 0
+        for instance in queryset:
+            instance.pull(commit=True)
+            pulled = pulled + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % pulled
+        self.message_user(
+            request,
+            "%s successfully pulled." % message_bit
+        )
+    pull.short_description = ugettext('Pull selected instances')
 
     def capture(self, request, queryset):
         captured = 0

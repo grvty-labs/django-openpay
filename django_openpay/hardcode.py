@@ -269,6 +269,19 @@ plan_repeatunit = (
     (plan_repeatunit_year, ugettext_lazy('Year')),
 )
 
+subscription_status_trial = 'trial'
+subscription_status_active = 'active'
+subscription_status_pastdue = 'past_due'
+subscription_status_unpaid = 'unpaid'
+subscription_status_cancelled = 'cancelled'
+subscription_status = (
+    (subscription_status_trial, ugettext_lazy('Trial')),
+    (subscription_status_active, ugettext_lazy('Active')),
+    (subscription_status_pastdue, ugettext_lazy('Past Due')),
+    (subscription_status_unpaid, ugettext_lazy('Unpaid')),
+    (subscription_status_cancelled, ugettext_lazy('Cancelled')),
+)
+
 transaction_ttype_fee = 'fee'
 transaction_ttype_charge = 'charge'
 transaction_ttype_payout = 'payout'

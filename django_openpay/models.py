@@ -43,7 +43,7 @@ class AbstractOpenpayBase(models.Model):
     def push(self):
         raise NotImplementedError
 
-    def pull(self):
+    def pull(self, commit=False):
         raise NotImplementedError
 
     def retrieve(self):
@@ -53,7 +53,7 @@ class AbstractOpenpayBase(models.Model):
         raise NotImplementedError
 
 
-class Address(AbstractOpenpayBase):
+class Address(models.Model):
     city = models.TextField(
         blank=False,
         null=False,
@@ -95,8 +95,8 @@ class Address(AbstractOpenpayBase):
     @classmethod
     def get_readonly_fields(self, instance=None):
         if instance:
-            return ['openpay_id', 'creation_date']
-        return ['openpay_id', 'creation_date']
+            return ['creation_date']
+        return ['creation_date']
 
     # Obtained and edited from:
     # https://goo.gl/SqkLbo
@@ -112,7 +112,7 @@ class Address(AbstractOpenpayBase):
                     data[f.name] = list(
                         f.value_from_object(self).values_list('pk', flat=True)
                     )
-            elif f.name not in ['id', 'creation_date', 'openpay_id']:
+            elif f.name not in ['id', 'creation_date']:
                 data[f.name] = f.value_from_object(self)
         return data
 
@@ -175,7 +175,7 @@ class AbstractCustomer(AbstractOpenpayBase):
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
         self.first_name = self._openpay.name
         self.last_name = self._openpay.last_name
@@ -183,6 +183,8 @@ class AbstractCustomer(AbstractOpenpayBase):
         self.phone_number = self._openpay.phone_number
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if self.openpay_id:
@@ -287,7 +289,7 @@ class Card(AbstractOpenpayBase):
     def push(self):
         raise NotImplementedError
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
         self.card_type = self._openpay.type
         self.holder = self._openpay.holder_name
@@ -296,6 +298,8 @@ class Card(AbstractOpenpayBase):
         self.year = self._openpay.expiration_year[-2:]
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if not self.customer or not self.customer.openpay_id:
@@ -411,7 +415,7 @@ class Plan(AbstractOpenpayBase):
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
         self.name = self._openpay.name
         self.amount = Decimal(self._openpay.amount)
@@ -422,6 +426,8 @@ class Plan(AbstractOpenpayBase):
         self.repeat_every = self._openpay.repeat_every
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if self.openpay_id:
@@ -475,16 +481,42 @@ class Subscription(AbstractOpenpayBase):
         blank=True,
         null=False,
         verbose_name=ugettext_lazy('Cancel at the end of period'))
+    charge_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=ugettext_lazy('Charge date'))
+    period_end_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=ugettext_lazy('Period end date'))
+    status = models.CharField(
+        default=hardcode.subscription_status_trial,
+        choices=hardcode.subscription_status,
+        max_length=10,
+        blank=True,
+        null=False,
+        verbose_name=ugettext_lazy('Transaction Type'))
+    current_period_number = models.IntegerField(
+        default=0,
+        blank=True,
+        null=False,
+        verbose_name=ugettext_lazy('Trial days'))
     trial_end_date = models.DateField(
         blank=True,
         null=True,
-        verbose_name=ugettext_lazy('Trial days'))
+        verbose_name=ugettext_lazy('Trial end date'))
 
     @classmethod
     def get_readonly_fields(self, instance=None):
         if instance:
-            return ['openpay_id', 'customer', 'plan', 'creation_date']
-        return ['openpay_id', 'creation_date']
+            return ['openpay_id', 'customer', 'plan', 'charge_date',
+                    'period_end_date', 'status', 'current_period_number',
+                    'creation_date']
+        return ['openpay_id', 'charge_date', 'period_end_date', 'status',
+                'current_period_number', 'creation_date']
+
+    def cancel_subscription(self):
+        self.remove()
 
     def push(self):
         if self.openpay_id:
@@ -517,14 +549,22 @@ class Subscription(AbstractOpenpayBase):
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         self.retrieve()
-        self.trial_end_date = parse_date(
-            self._openpay.trial_end_date)
         self.cancel_at_period_end = \
             self._openpay.cancel_at_period_end
+        self.charge_date = parse_date(
+            self._openpay.charge_date)
+        self.period_end_date = parse_date(
+            self._openpay.period_end_date)
+        self.status = self._openpay.status
+        self.current_period_number = self._openpay.current_period_number
+        self.trial_end_date = parse_date(
+            self._openpay.trial_end_date)
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if not self.customer or not self.customer.openpay_id:
@@ -704,11 +744,11 @@ class Charge(AbstractTransaction):
                 currency=self.currency,
                 description=self.description,
                 device_session_id=openpay.device_id,
-                capture=False)
+                capture=True)
             self.openpay_id = self._openpay.id
             self.pull()
 
-    def pull(self):
+    def pull(self, commit=False):
         # TODO: Pull Customer and Card
         self.retrieve()
         self.authorization = self._openpay.authorization
@@ -726,6 +766,8 @@ class Charge(AbstractTransaction):
         self.currency = self._openpay.currency
         self.creation_date = parse_datetime(
             self._openpay.creation_date)
+        if commit:
+            self.save()
 
     def retrieve(self):
         if not self.customer or not self.customer.openpay_id:
