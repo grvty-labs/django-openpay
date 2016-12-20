@@ -16,3 +16,12 @@ def basic_auth_required(func):
             request.META['REMOTE_USER'] = validated_username
             return func(request, *args, **kwargs)
     return _wrapped
+
+
+def skippable(signal_func):
+    @wraps(signal_func)
+    def _decorator(sender, instance, **kwargs):
+        if getattr(instance, 'skip_signal', False):
+            return None
+        return signal_func(sender, instance, **kwargs)
+    return _decorator

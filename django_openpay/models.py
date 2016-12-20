@@ -7,8 +7,10 @@ from django.dispatch import receiver
 from django.utils.dateparse import parse_datetime, parse_date
 
 from decimal import Decimal
+from jsonfield import JSONField
 
 from . import openpay, hardcode, ugettext_lazy, exceptions
+from .decorators import skippable
 
 
 phone_validator = RegexValidator(
@@ -140,8 +142,8 @@ class AbstractCustomer(AbstractOpenpayBase):
         verbose_name=ugettext_lazy('Phone Number'))
     address = models.OneToOneField(
         Address,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         related_name='customer',
         verbose_name=ugettext_lazy('Address'))
 
@@ -159,21 +161,23 @@ class AbstractCustomer(AbstractOpenpayBase):
             if not hasattr(self, '_openpay'):
                 self.retrieve()
             self._openpay.name = self.first_name
-            self._openpay.last_name = self.last_name
+            self._openpay.last_name = self.last_name if \
+                self.last_name else None
             self._openpay.email = self.email
-            self._openpay.phone_number = self.phone_number
-            self._openpay.address = self.address.json_dict
+            self._openpay.phone_number = self.phone_number if \
+                self.phone_number else None
+            self._openpay.address = self.address.json_dict if \
+                self.address else None
             self._openpay.save()
 
         else:
             self._openpay = openpay.Customer.create(
                 name=self.first_name,
-                last_name=self.last_name,
+                last_name=self.last_name if self.last_name else None,
                 email=self.email,
-                phone_number=self.phone_number,
-                address=self.address.json_dict)
+                phone_number=self.phone_number if self.phone_number else None,
+                address=self.address.json_dict if self.address else None)
             self.openpay_id = self._openpay.id
-            self.pull()
 
     def pull(self, commit=False):
         self.retrieve()
@@ -209,6 +213,7 @@ class AbstractCustomer(AbstractOpenpayBase):
 
 
 @receiver(pre_save, sender=CustomerModel)
+@skippable
 def customer_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     instance.email = instance.email.strip()
@@ -329,6 +334,7 @@ class Card(AbstractOpenpayBase):
 
 # TODO: Card creation without token
 @receiver(pre_save, sender=Card)
+@skippable
 def card_presave(sender, instance=None, **kwargs):
     instance.full_clean()
 
@@ -413,7 +419,6 @@ class Plan(AbstractOpenpayBase):
                 trial_days=self.trial_days,
                 repeat_every=self.repeat_every)
             self.openpay_id = self._openpay.id
-            self.pull()
 
     def pull(self, commit=False):
         self.retrieve()
@@ -447,6 +452,7 @@ class Plan(AbstractOpenpayBase):
 
 
 @receiver(pre_save, sender=Plan)
+@skippable
 def plan_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     instance.push()
@@ -547,7 +553,6 @@ class Subscription(AbstractOpenpayBase):
                     self.cancel_at_period_end
                 self._openpay.save()
             self.openpay_id = self._openpay.id
-            self.pull()
 
     def pull(self, commit=False):
         self.retrieve()
@@ -591,6 +596,7 @@ class Subscription(AbstractOpenpayBase):
 
 
 @receiver(pre_save, sender=Subscription)
+@skippable
 def subscription_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     if instance.card.customer_id != instance.customer_id:
@@ -746,7 +752,6 @@ class Charge(AbstractTransaction):
                 device_session_id=openpay.device_id,
                 capture=True)
             self.openpay_id = self._openpay.id
-            self.pull()
 
     def pull(self, commit=False):
         # TODO: Pull Customer and Card
@@ -789,6 +794,7 @@ class Charge(AbstractTransaction):
 
 
 @receiver(pre_save, sender=Charge)
+@skippable
 def charge_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     if instance.card.customer_id != instance.customer_id:
