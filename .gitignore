@@ -125,4 +125,6 @@ django_openpay_repo/
 /package.json
 /requirements.txt
 /webpack.config.js
+/data
 !testing/*
+!testing/data/*

@@ -6,6 +6,20 @@ new releases and how they could impact your current installations of this
 package.
 
 
+*   v0.4.0
+    *   Improved the `Plan` model. We added the **status** and multiple
+    description fields. This fields just have one real purpose. Front-end
+    representation. The **benefits** field is a JSONField which you can use
+    as you please to display the features of each plan. The **excerpt** is a
+    CharField limited to 250 characters, used to explain in a single line the
+    plan.
+    *   Started the **openpaysync** command to the `manage.py` options. This
+    command has the purpose to download everything from your Openpay account.
+    By now it only pulls Plans, Customers, Subscriptions and Cards (it
+    updates each instance if found in your Django database, else it will create
+    it).
+
+
 *   v0.3.0
     *   Added the reception and interpretation of the information received from
     Openpay through their **webhook**. A [Postman project][postman-pkg] has
