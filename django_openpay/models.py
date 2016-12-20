@@ -11,6 +11,7 @@ from jsonfield import JSONField
 
 from . import openpay, hardcode, ugettext_lazy, exceptions
 from .decorators import skippable
+from .utils import get_customer_model
 
 
 phone_validator = RegexValidator(
@@ -178,6 +179,7 @@ class AbstractCustomer(AbstractOpenpayBase):
                 phone_number=self.phone_number if self.phone_number else None,
                 address=self.address.json_dict if self.address else None)
             self.openpay_id = self._openpay.id
+            self.pull()
 
     def pull(self, commit=False):
         self.retrieve()
@@ -275,7 +277,7 @@ class Card(AbstractOpenpayBase):
     def tokenized_create(cls, customerId, tokenId, deviceId, alias=''):
         card_op = openpay.Card.create(customer=customerId, token_id=tokenId,
                                       device_session_id=deviceId)
-        customer = Customer.objects.get(openpay_id=customerId)
+        customer = get_customer_model().objects.get(openpay_id=customerId)
         # The card addres cannot be consulted
         card = cls(
             openpay_id=card_op.id,
@@ -289,7 +291,8 @@ class Card(AbstractOpenpayBase):
                 card_op.creation_date),
             customer=customer)
         card._openpay = card_op
-        return card.save()
+        card.save()
+        return card
 
     def push(self):
         raise NotImplementedError
@@ -432,6 +435,7 @@ class Plan(AbstractOpenpayBase):
                 trial_days=self.trial_days,
                 repeat_every=self.repeat_every)
             self.openpay_id = self._openpay.id
+            self.pull()
 
     def pull(self, commit=False):
         self.retrieve()
@@ -566,6 +570,7 @@ class Subscription(AbstractOpenpayBase):
                     self.cancel_at_period_end
                 self._openpay.save()
             self.openpay_id = self._openpay.id
+            self.pull()
 
     def pull(self, commit=False):
         self.retrieve()
@@ -765,6 +770,7 @@ class Charge(AbstractTransaction):
                 device_session_id=openpay.device_id,
                 capture=True)
             self.openpay_id = self._openpay.id
+            self.pull()
 
     def pull(self, commit=False):
         # TODO: Pull Customer and Card
