@@ -2,7 +2,10 @@ include README.md
 include LICENSE
 graft django_openpay
 
-exclude django_openpay_repo*
+exclude django_openpay_repo *
+recursive-exclude django_openpay_repo *
+exclude tmpMigrations *
+recursive-exclude tmpMigrations *
 recursive-exclude * __pycache__
 recursive-exclude * *.pyc
 recursive-exclude * *.pyo
