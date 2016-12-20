@@ -25,6 +25,6 @@ def updateSubscriptions():
 
     if subscriptions_in_system.exists():
         for subscription in subscriptions_in_system.iterator():
-            subscription.pull(commit=True)
+            subscription.op_refresh(save=True)
 
     logger.info("System subscriptions up to date with Openpay's servers.")

@@ -19,24 +19,25 @@ class AddressAdmin(admin.ModelAdmin):
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
     model = models.Card
-    actions = ['pull', ]
+    actions = ['refresh', ]
     list_display = ('pk', 'openpay_id', 'alias', 'holder', 'customer',
                     'creation_date')
 
-    def pull(self, request, queryset):
-        pulled = 0
+    def refresh(self, request, queryset):
+        refreshed = 0
         for instance in queryset:
-            instance.pull(commit=True)
-            pulled = pulled + 1
+            instance.skip_signal = True
+            instance.op_refresh(save=True)
+            refreshed = refreshed + 1
         if captured == 1:
             message_bit = "1 instance was"
         else:
-            message_bit = "%s instances were" % pulled
+            message_bit = "%s instances were" % refreshed
         self.message_user(
             request,
-            "%s successfully pulled." % message_bit
+            "%s successfully refreshed." % message_bit
         )
-    pull.short_description = ugettext('Pull selected instances')
+    refresh.short_description = ugettext('Refresh selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Card.get_readonly_fields(obj)
@@ -45,24 +46,25 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(models.Plan)
 class PlanAdmin(admin.ModelAdmin):
     model = models.Plan
-    actions = ['pull', ]
-    list_display = ('name', 'openpay_id', 'amount', 'repeat_every',
+    actions = ['refresh', ]
+    list_display = ('name', 'openpay_id', 'status', 'amount', 'repeat_every',
                     'repeat_unit', 'creation_date')
 
-    def pull(self, request, queryset):
-        pulled = 0
+    def refresh(self, request, queryset):
+        refreshed = 0
         for instance in queryset:
-            instance.pull(commit=True)
-            pulled = pulled + 1
+            instance.skip_signal = True
+            instance.op_refresh(save=True)
+            refreshed = refreshed + 1
         if captured == 1:
             message_bit = "1 instance was"
         else:
-            message_bit = "%s instances were" % pulled
+            message_bit = "%s instances were" % refreshed
         self.message_user(
             request,
-            "%s successfully pulled." % message_bit
+            "%s successfully refreshed." % message_bit
         )
-    pull.short_description = ugettext('Pull selected instances')
+    refresh.short_description = ugettext('Refresh selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Plan.get_readonly_fields(obj)
@@ -71,24 +73,25 @@ class PlanAdmin(admin.ModelAdmin):
 @admin.register(models.Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     model = models.Subscription
-    actions = ['pull', ]
+    actions = ['refresh', ]
     list_display = ('pk', 'openpay_id', 'customer', 'plan', 'card',
                     'creation_date')
 
-    def pull(self, request, queryset):
-        pulled = 0
+    def refresh(self, request, queryset):
+        refreshed = 0
         for instance in queryset:
-            instance.pull(commit=True)
-            pulled = pulled + 1
-        if pulled == 1:
+            instance.skip_signal = True
+            instance.op_refresh(save=True)
+            refreshed = refreshed + 1
+        if refreshed == 1:
             message_bit = "1 instance was"
         else:
-            message_bit = "%s instances were" % pulled
+            message_bit = "%s instances were" % refreshed
         self.message_user(
             request,
-            "%s successfully pulled." % message_bit
+            "%s successfully refreshed." % message_bit
         )
-    pull.short_description = ugettext('Pull selected instances')
+    refresh.short_description = ugettext('Refresh selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Subscription.get_readonly_fields(obj)
@@ -97,24 +100,25 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(models.Refund)
 class RefundAdmin(admin.ModelAdmin):
     model = models.Refund
-    actions = ['pull', ]
+    actions = ['refresh', ]
     list_display = ('pk', 'openpay_id', 'customer', 'charge', 'amount',
                     'creation_date')
 
-    def pull(self, request, queryset):
-        pulled = 0
+    def refresh(self, request, queryset):
+        refreshed = 0
         for instance in queryset:
-            instance.pull(commit=True)
-            pulled = pulled + 1
+            instance.skip_signal = True
+            instance.op_refresh(save=True)
+            refreshed = refreshed + 1
         if captured == 1:
             message_bit = "1 instance was"
         else:
-            message_bit = "%s instances were" % pulled
+            message_bit = "%s instances were" % refreshed
         self.message_user(
             request,
-            "%s successfully pulled." % message_bit
+            "%s successfully refreshed." % message_bit
         )
-    pull.short_description = ugettext('Pull selected instances')
+    refresh.short_description = ugettext('Refresh selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Refund.get_readonly_fields(obj)
@@ -123,29 +127,30 @@ class RefundAdmin(admin.ModelAdmin):
 @admin.register(models.Charge)
 class ChargeAdmin(admin.ModelAdmin):
     model = models.Charge
-    actions = ['pull', 'capture', 'refund']
+    actions = ['refresh', 'capture', 'refund']
     list_display = ('pk', 'openpay_id', 'customer', 'card', 'amount',
                     'creation_date')
 
-    def pull(self, request, queryset):
-        pulled = 0
+    def refresh(self, request, queryset):
+        refreshed = 0
         for instance in queryset:
-            instance.pull(commit=True)
-            pulled = pulled + 1
+            instance.skip_signal = True
+            instance.op_refresh(save=True)
+            refreshed = refreshed + 1
         if captured == 1:
             message_bit = "1 instance was"
         else:
-            message_bit = "%s instances were" % pulled
+            message_bit = "%s instances were" % refreshed
         self.message_user(
             request,
-            "%s successfully pulled." % message_bit
+            "%s successfully refreshed." % message_bit
         )
-    pull.short_description = ugettext('Pull selected instances')
+    refresh.short_description = ugettext('Refresh selected instances')
 
     def capture(self, request, queryset):
         captured = 0
         for charge in queryset:
-            charge.capture_charge()
+            charge.op_capture()
             captured = captured + 1
         if captured == 1:
             message_bit = "1 charge was"
@@ -160,7 +165,7 @@ class ChargeAdmin(admin.ModelAdmin):
     def refund(self, request, queryset):
         refunded = 0
         for charge in queryset:
-            charge.refund_charge()
+            charge.op_refund()
             refunded = refunded + 1
         if refunded == 1:
             message_bit = "1 charge was"

@@ -36,13 +36,11 @@ class Command(BaseCommand):
                         planJson['creation_date'])
                     dbobj.save()
                     dbPlans[planJson['id']] = dbobj.pk
-        print('{} plans pulled from Openpay.'.format(
-            plansList.get('count', 0)))
         return dbPlans
 
     def cards(self, customer):
         dbCards = dict()
-        cardsList = customer._openpay.cards.all()
+        cardsList = customer.op_cards()
         if cardsList.get('count', 0) > 0:
             for cardJson in cardsList.get('data', []):
                 try:
@@ -66,7 +64,7 @@ class Command(BaseCommand):
         return dbCards
 
     def subscriptions(self, customer, plans, cards):
-        subscriptionsList = customer._openpay.subscriptions.all()
+        subscriptionsList = customer.op_subscriptions()
         if subscriptionsList.get('count', 0) > 0:
             for subscriptionJson in subscriptionsList.get('data', []):
                 try:
@@ -77,8 +75,8 @@ class Command(BaseCommand):
                         openpay_id=subscriptionJson['id'])
                 finally:
                     dbobj.skip_signal = True
-                    dbobj.customer_id = customer.pk,
-                    dbobj.plan_id = plans[subscriptionJson['plan_id']],
+                    dbobj.customer_id = customer.pk
+                    dbobj.plan_id = plans[subscriptionJson['plan_id']]
                     dbobj.card_id = cards[subscriptionJson['card']['id']]
                     dbobj.cancel_at_period_end = \
                         subscriptionJson['cancel_at_period_end']
@@ -94,33 +92,39 @@ class Command(BaseCommand):
                     dbobj.creation_date = parse_datetime(
                         subscriptionJson['creation_date'])
                     dbobj.save()
+        return subscriptionsList.get('count', 0)
 
     def customers(self, plans):
-        dbCustomers = dict()
-        print('\n\n\nPulling Customers from Openpay ...')
+        cardsNum = 0
+        subsNum = 0
+        print('Pulling Customers from Openpay ...')
         customerModel = djop.utils.get_customer_model()
         customersList = djop.openpay.Customer.all()
         if customersList.get('count', 0) > 0:
             for customerJson in customersList.get('data', []):
                 try:
                     dbobj = customerModel.objects.get(
-                        openpay_id=customerJson['id']
-                    )
+                        openpay_id=customerJson['id'])
                 except customerModel.DoesNotExist:
                     dbobj = customerModel(openpay_id=customerJson['id'])
                 finally:
                     dbobj.skip_signal = True
-                    dbobj.pull(commit=True)
+                    dbobj.op_refresh(save=True)
                     cards = self.cards(dbobj)
-                    self.subscriptions(dbobj, plans, cards)
+                    cardsNum += len(cards)
+                    subs = self.subscriptions(dbobj, plans, cards)
+                    subsNum += subs
 
-        print('{} customers pulled from Openpay.'.format(
-            customersList.get('count', 0)))
-        return dbCustomers
+        return customersList.get('count', 0), cardsNum, subsNum
 
     @transaction.atomic
     def handle(self, *args, **options):
         # print('Pulling Subscriptions from Openpay ...')
         # plansList = djop.openpay.Subscription.all()
         plans = self.plans()
-        customers = self.customers(plans)
+        customers, cards, subs = self.customers(plans)
+
+        print('{} plans pulled from Openpay.'.format(len(plans)))
+        print('{} customers pulled from Openpay.'.format(customers))
+        print('{} cards pulled from Openpay.'.format(cards))
+        print('{} subscriptions pulled from Openpay.'.format(subs))
