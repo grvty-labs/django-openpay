@@ -33,6 +33,6 @@ OpenPay libraries for online transactions',
     zip_safe=False,
     install_requires=[
         'jsonfield',
-        'OpenpayGrvty>=0.4.6',
+        'OpenpayGrvty>=0.4.7',
     ]
 )
