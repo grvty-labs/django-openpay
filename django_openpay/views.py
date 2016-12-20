@@ -22,13 +22,11 @@ def cardSave(request):
         deviceId = body.get('deviceId', False)
         customerId = body.get('customerId', False)
         if token and deviceId and customerId:
-            card = models.Card.tokenized_create(
+            card = models.Card.create_with_token(
                 customerId=customerId,
                 tokenId=token,
                 deviceId=deviceId,
-                alias=body.get('alias', '')
-            )
-
+                alias=body.get('alias', ''))
             return HttpResponse()
     return HttpResponse(status=400)
 

@@ -6,6 +6,53 @@ new releases and how they could impact your current installations of this
 package.
 
 
+*   v1.0.0
+    *   This version is considered our **first beta version** (v2.0
+    will be the first stable version). This means that the models will
+    not have significant changes made to their fields. Although the
+    functionality can be greatly improved or modified.
+    *   The trash has been dumped. No more empty or unnecessary files.
+    All other files (like the `static`s) have been placed inside
+    *testing*.
+    *   We are working in improving the `wheels` files, to prevent the
+    upload of our testing folders (like `django_openpay_repo`), which are
+    not in this repository but apparently they are uploaded every time we
+    publish this package, any help is welcome to solve this dumb problem.
+    *   The **openpaysync** command has been greatly improved, but this
+    required some modifications in the models methods.
+    *   We renamed most of the methods to prevent collisions with the
+    Django's defaults and to make more clear the use of the methods:
+        *   Added the `op_fill` method, which will parse and fill the
+        model instance with what has been pulled from the Openpay's
+        system. This method works with what has already been pulled, it
+        doesn't execute another *retrieve* from the Openpay's servers.
+        *   The `retrieve` method was renamed to `op_load`, but works as
+        before: request the latest data from the Openpay server and
+        save it in a private variable.
+        *   The `pull` method was renamed to `op_refresh` and works
+        as always. It requests the object's data (using `op_load`) parses
+        it (using `op_fill`) and, if the `save` parameter is `True`, it
+        saves it to the DB immediately.
+        *   The `push` has been renamed to `op_commit`. The only
+        difference is that this method will execute an `op_fill` every
+        time it is called. The reason behind this is: Openpay always
+        responds to an object update with the new values, by doing an
+        `op_fill` we can ensure that your instance is consistent with
+        what Openpay has.
+        *   The `remove` method was renamed to `op_dismiss`. Remember that
+        not all Openpay's objects are destroyed, they are just hidden, so
+        instead of *deleting* your objects from the database, try to
+        just hide them and use the `op_dismiss`. In future versions
+        (probably v1.2) we will have improved this aspect as much as we
+        can.
+        *   The private attribute `_openpay` was renamed to `_op_`.
+        Although our intention was to use the *name mangling* option of
+        Python, some generic functionality cannot work with that
+        (`hasattr` and `getattr` cannot detect this kind of attributes),
+        for now it is a useless change, but our intention is to completely
+        hide it (v1.5), so beware.
+
+
 *   v0.4.1
     *   I am so ashamed about this bug. I forgot a crucial part of the
     `AbstractCustomer` relation with the `Card` model. I also deleted the

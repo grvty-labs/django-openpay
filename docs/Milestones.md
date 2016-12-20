@@ -33,30 +33,6 @@ accomplish and what to expect in future versions.
     [issue][openpay-issue] to know more about the problems detected.
 
 
-*   v1.0
-    *   **Not released yet**.
-    *   This version will be considered our **first stable version**. This
-    means that the models will not have significant changes made to their
-    fields. Although the functionality can be greatly improved or modified.
-    *   The **Customer** model will be converted to an abstract model. In order
-    to be able to connect it to your model User at will, but this would require
-    a CustomUser model. I am searching a better way to do this.
-    *   The **Webhooks Feature** will be completely connected and tested with
-    the Openpay servers. In this way, we should be able to create Charges from
-    Django and/or JavaScript, and be able to see all the recurring charges made
-    automatically by the Openpay system. The Verification step of this feature
-    should send an email to the developer so he can confirm the webhook inside
-    the Openpay system, as well.
-    *   Django **Internationalization** will be completed for English and
-    quite a great part will be translated to Spanish.
-    *   **Celery** will start being used to prevent communication bottlenecks
-    with the Openpay API
-    *   Populate your database with all the data saved inside your Openpay
-    account using the command **openpaysync** by calling it from the
-    `manage.py` file.
-
-
-
 Owned and developed by
 --------
 

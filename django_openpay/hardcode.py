@@ -253,13 +253,18 @@ address_countrycodes = (  # FIXME: Translate from spanish to english
     ('ZW', ugettext_lazy('Zimbabue')),
 )
 
+plan_status_active = 'active'
+plan_status_deleted = 'deleted'
+plan_status = (
+    (plan_status_active, ugettext_lazy('Active')),
+    (plan_status_deleted, ugettext_lazy('Deleted')),
+)
 plan_statusafter_unpaid = 'unpaid'
 plan_statusafter_cancelled = 'cancelled'
 plan_statusafter = (
     (plan_statusafter_unpaid, ugettext_lazy('Unpaid')),
     (plan_statusafter_cancelled, ugettext_lazy('Cancelled')),
 )
-
 plan_repeatunit_week = 'week'
 plan_repeatunit_month = 'month'
 plan_repeatunit_year = 'year'
