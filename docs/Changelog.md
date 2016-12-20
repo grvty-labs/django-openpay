@@ -6,6 +6,13 @@ new releases and how they could impact your current installations of this
 package.
 
 
+*   v0.4.1
+    *   I am so ashamed about this bug. I forgot a crucial part of the
+    `AbstractCustomer` relation with the `Card` model. I also deleted the
+    `pull` that was executed when creation a new object in all models, this
+    cannot be, due to some fields that we MUST pull from the Openpay database.
+
+
 *   v0.4.0
     *   Improved the `Plan` model. We added the **status** and multiple
     description fields. This fields just have one real purpose. Front-end
