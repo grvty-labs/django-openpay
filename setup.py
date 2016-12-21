@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setup(
     name='django-openpay',
-    version='1.0.0',
+    version='1.0.1',
     description='Django application which integrates the \
 OpenPay libraries for online transactions',
     long_description=readme,
@@ -15,7 +15,9 @@ OpenPay libraries for online transactions',
     author_email='daniel.ortiz@grvtylabs.com',
     url='https://github.com/grvty-labs/django-openpay',
     packages=find_packages(
-        exclude=['django_openpay_repo.*', 'django_openpay_repo']),
+        exclude=[
+            'django_openpay_repo.*', 'django_openpay_repo',
+            'tmpMigrations.*', 'tmpMigrations']),
     # packages=['django_openpay'],
     license='MIT',
     classifiers=[
