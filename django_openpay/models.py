@@ -736,6 +736,12 @@ class AbstractTransaction(AbstractOpenpayBase):
 
 
 class Charge(AbstractTransaction):
+    subscription = models.ForeignKey(
+        Subscription,
+        blank=True,
+        null=True,
+        related_name='charges',
+        verbose_name=ugettext_lazy('Subscription'))
     conciliated = models.BooleanField(
         default=True,
         blank=True,
@@ -758,7 +764,7 @@ class Charge(AbstractTransaction):
             self.op_load()
         self._op_.capture()
 
-    def op_refund(self):
+    def op_refund(self, amount=None):
         if not self.openpay_id:
             raise exceptions.OpenpayObjectDoesNotExist
         if self.method != hardcode.transaction_method_card:
@@ -766,7 +772,7 @@ class Charge(AbstractTransaction):
 
         if not hasattr(self, '_op_'):
             self.op_load()
-        self._op_.refund()
+        self._op_.refund(amount) if amount else self._op_.refund()
 
     def op_commit(self):
         if not self.openpay_id:
@@ -788,18 +794,22 @@ class Charge(AbstractTransaction):
         self.op_fill()
 
     def op_load(self):
-        if not self.customer or not self.customer.openpay_id:
-            raise exceptions.OpenpayNoCustomer
-
         if self.openpay_id:
-            self._op_ = openpay.Customer.retrieve(
-                self.customer.openpay_id
-            ).charges.retrieve(self.openpay_id)
+            if self.customer and self.customer.openpay_id:
+                try:
+                    self._op_ = openpay.Customer.retrieve(
+                        self.customer.openpay_id
+                    ).charges.retrieve(self.openpay_id)
+                except openpay.error.InvalidRequestError:
+                    self._op_ = openpay.Charge.retrieve_as_merchant(
+                        self.openpay_id)
+            else:
+                self._op_ = openpay.Charge.retrieve_as_merchant(
+                    self.openpay_id)
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
     def op_fill(self):
-        # TODO: Pull Customer and Card
         if not hasattr(self, '_op_'):
             self.op_load()
         self.authorization = self._op_.authorization
@@ -817,6 +827,18 @@ class Charge(AbstractTransaction):
         self.currency = self._op_.currency
         self.creation_date = parse_datetime(
             self._op_.creation_date)
+        if hasattr(self._op_, 'subscription_id'):
+            self.subscription = Subscription.objects.get(
+                openpay_id=self._op_.subscription_id)
+        if hasattr(self._op_, 'customer_id'):
+            self.customer = get_customer_model().objects.get(
+                openpay_id=self._op_.customer_id)
+        if hasattr(self._op_, 'card'):
+            self.card = Card.objects.get(
+                openpay_id=self._op_.card.id)
+            if not self.customer and hasattr(self._op_.card, 'customer_id'):
+                self.customer = get_customer_model().objects.get(
+                    openpay_id=self._op_.card.customer_id)
 
     def op_dismiss(self):
         raise NotImplementedError
@@ -831,7 +853,7 @@ def charge_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     if instance.card.customer_id != instance.customer_id:
         raise exceptions.OpenpayNotUserCard
-    instance.push()
+    instance.op_commit()
 
 
 # This WILL FAIL. And that is the point: to prevent the deletion of charges

@@ -8,6 +8,9 @@ package.
 
 *   v1.1.0
     *   Improved the **dismiss** feature, although it is not yet finished.
+    *   The **webhooks** section and `Charge` model were fixed. The webhooks
+    hadn't been connected to the `AbstractCustomer` model, while the `Charge`
+    model was not pulling the Customer, Card and Subscription information.
 
 
 *   v1.0.1
