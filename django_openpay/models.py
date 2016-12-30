@@ -148,8 +148,8 @@ class Address(models.Model):
         return data
 
 
-# class AbstractCustomer(AbstractOpenpayBase):
-class Customer(AbstractOpenpayBase):
+# class Customer(AbstractOpenpayBase):
+class AbstractCustomer(AbstractOpenpayBase):
     first_name = models.CharField(
         max_length=60,
         blank=False,
@@ -177,8 +177,8 @@ class Customer(AbstractOpenpayBase):
         related_name='customer',
         verbose_name=ugettext_lazy('Address'))
 
-    # class Meta:
-    #     abstract = True
+    class Meta:
+        abstract = True
 
     @classmethod
     def get_readonly_fields(self, instance=None):
