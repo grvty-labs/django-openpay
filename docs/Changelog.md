@@ -6,6 +6,15 @@ new releases and how they could impact your current installations of this
 package.
 
 
+*   v1.1.0
+    *   Improved the **dismiss** feature, although it is not yet finished.
+
+
+*   v1.0.1
+    *   Quick-fix on errors in the migrations. This is just temporary, because
+    it really doesn't fix the problem, it just hides it.
+
+
 *   v1.0.0
     *   This version is considered our **first beta version** (v2.0
     will be the first stable version). This means that the models will

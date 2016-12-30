@@ -9,7 +9,7 @@ from django.utils.dateparse import parse_datetime, parse_date
 from decimal import Decimal
 from jsonfield import JSONField
 
-from . import openpay, hardcode, ugettext_lazy, exceptions
+from . import openpay, hardcode, ugettext_lazy, exceptions, ungettext_lazy
 from .decorators import skippable
 from .utils import get_customer_model
 
@@ -43,6 +43,12 @@ class AbstractOpenpayBase(models.Model):
     def get_readonly_fields(self, instance=None):
         raise NotImplementedError
 
+    @property
+    def op_dismissable(self):
+        if self.openpay_id:
+            return True
+        return False
+
     def op_commit(self):
         # Save the changes in the object directly to the openpay servers
         raise NotImplementedError
@@ -64,14 +70,18 @@ class AbstractOpenpayBase(models.Model):
         # If the Openpay data has not been loaded, call op_load.
         raise NotImplementedError
 
-    def op_dismiss(self):
+    def op_dismiss(self, save=False):
         # Execute the removal of the openpay object (in the openpay server),
         # this same removal could be a logical or physical destruction, but the
         # way to call it is the same.
-        if self.openpay_id:
+        if self.op_dismissable:
             if not hasattr(self, '_op_'):
                 self.op_load()
             self._op_.delete()
+
+            if save:
+                self.skip_signal = True
+                self.save()
 
 
 class Address(models.Model):
@@ -251,6 +261,7 @@ def customer_presave(sender, instance=None, **kwargs):
 
 
 @receiver(pre_delete, sender=CustomerModel)
+@skippable
 def customer_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
@@ -357,6 +368,7 @@ def card_presave(sender, instance=None, **kwargs):
 
 
 @receiver(post_delete, sender=Card)
+@skippable
 def card_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
@@ -482,6 +494,7 @@ def plan_presave(sender, instance=None, **kwargs):
 
 
 @receiver(post_delete, sender=Plan)
+@skippable
 def plan_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
@@ -543,6 +556,12 @@ class Subscription(AbstractOpenpayBase):
                     'creation_date']
         return ['openpay_id', 'charge_date', 'period_end_date', 'status',
                 'current_period_number', 'creation_date']
+    @property
+    def op_dismissable(self):
+        if self.openpay_id and \
+                self.status != hardcode.subscription_status_cancelled:
+            return True
+        return False
 
     def op_commit(self):
         if self.openpay_id:
@@ -618,6 +637,7 @@ def subscription_presave(sender, instance=None, **kwargs):
 
 
 @receiver(post_delete, sender=Subscription)
+@skippable
 def subscription_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
