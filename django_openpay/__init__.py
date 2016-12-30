@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.translation import ugettext, ugettext_lazy
+from django.utils.translation import ugettext, ugettext_lazy, ungettext_lazy
 
 import openpay
 
@@ -14,8 +14,8 @@ def start():
     OPENPAY_MERCHANT_ID = getattr(settings, 'OPENPAY_MERCHANT_ID', None)
     OPENPAY_DEVICE_ID = getattr(settings, 'OPENPAY_DEVICE_ID', None)
     DEBUG = getattr(settings, 'DEBUG', None)
-    OPENPAY_BASICAUTH_USERS = getattr(
-        settings, 'OPENPAY_BASICAUTH_USERS', None)
+    # OPENPAY_BASICAUTH_USERS = getattr(
+    #     settings, 'OPENPAY_BASICAUTH_USERS', None)
     OPENPAY_CUSTOMER_MODEL = getattr(
         settings, 'OPENPAY_CUSTOMER_MODEL', None)
 
@@ -40,10 +40,10 @@ def start():
         raise ImproperlyConfigured(
             "DEBUG must be defined. (Boolean)"
         )
-    if not OPENPAY_BASICAUTH_USERS:
-        raise ImproperlyConfigured(
-            "OPENPAY_BASICAUTH_USERS must be defined. (Dict)"
-        )
+    # if not OPENPAY_BASICAUTH_USERS:
+    #     raise ImproperlyConfigured(
+    #         "OPENPAY_BASICAUTH_USERS must be defined. (Dict)"
+    #     )
     if not OPENPAY_CUSTOMER_MODEL:
         raise ImproperlyConfigured(
             "OPENPAY_CUSTOMER_MODEL must be defined. (String)"

@@ -19,7 +19,7 @@ class AddressAdmin(admin.ModelAdmin):
 @admin.register(models.Card)
 class CardAdmin(admin.ModelAdmin):
     model = models.Card
-    actions = ['refresh', ]
+    actions = ['refresh', 'dismiss', ]
     list_display = ('pk', 'openpay_id', 'alias', 'holder', 'customer',
                     'creation_date')
 
@@ -39,6 +39,22 @@ class CardAdmin(admin.ModelAdmin):
         )
     refresh.short_description = ugettext('Refresh selected instances')
 
+    def dismiss(self, request, queryset):
+        dismissed = 0
+        for instance in queryset:
+            instance.skip_signal = True
+            instance.op_dismiss(save=True)
+            dismissed = dismissed + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % dismissed
+        self.message_user(
+            request,
+            "%s successfully dismissed." % message_bit
+        )
+    dismiss.short_description = ugettext('Dismiss selected instances')
+
     def get_readonly_fields(self, request, obj=None):
         return models.Card.get_readonly_fields(obj)
 
@@ -46,7 +62,7 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(models.Plan)
 class PlanAdmin(admin.ModelAdmin):
     model = models.Plan
-    actions = ['refresh', ]
+    actions = ['refresh', 'dismiss', ]
     list_display = ('name', 'openpay_id', 'status', 'amount', 'repeat_every',
                     'repeat_unit', 'creation_date')
 
@@ -66,6 +82,22 @@ class PlanAdmin(admin.ModelAdmin):
         )
     refresh.short_description = ugettext('Refresh selected instances')
 
+    def dismiss(self, request, queryset):
+        dismissed = 0
+        for instance in queryset:
+            instance.skip_signal = True
+            instance.op_dismiss(save=True)
+            dismissed = dismissed + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % dismissed
+        self.message_user(
+            request,
+            "%s successfully dismissed." % message_bit
+        )
+    dismiss.short_description = ugettext('Dismiss selected instances')
+
     def get_readonly_fields(self, request, obj=None):
         return models.Plan.get_readonly_fields(obj)
 
@@ -73,7 +105,7 @@ class PlanAdmin(admin.ModelAdmin):
 @admin.register(models.Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
     model = models.Subscription
-    actions = ['refresh', ]
+    actions = ['refresh', 'dismiss', ]
     list_display = ('pk', 'openpay_id', 'customer', 'plan', 'card',
                     'creation_date')
 
@@ -93,6 +125,22 @@ class SubscriptionAdmin(admin.ModelAdmin):
         )
     refresh.short_description = ugettext('Refresh selected instances')
 
+    def dismiss(self, request, queryset):
+        dismissed = 0
+        for instance in queryset:
+            instance.skip_signal = True
+            instance.op_dismiss(save=True)
+            dismissed = dismissed + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % dismissed
+        self.message_user(
+            request,
+            "%s successfully dismissed." % message_bit
+        )
+    dismiss.short_description = ugettext('Dismiss selected instances')
+
     def get_readonly_fields(self, request, obj=None):
         return models.Subscription.get_readonly_fields(obj)
 
@@ -100,7 +148,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
 @admin.register(models.Refund)
 class RefundAdmin(admin.ModelAdmin):
     model = models.Refund
-    actions = ['refresh', ]
+    actions = ['refresh', 'dismiss', ]
     list_display = ('pk', 'openpay_id', 'customer', 'charge', 'amount',
                     'creation_date')
 
@@ -120,6 +168,22 @@ class RefundAdmin(admin.ModelAdmin):
         )
     refresh.short_description = ugettext('Refresh selected instances')
 
+    def dismiss(self, request, queryset):
+        dismissed = 0
+        for instance in queryset:
+            instance.skip_signal = True
+            instance.op_dismiss(save=True)
+            dismissed = dismissed + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % dismissed
+        self.message_user(
+            request,
+            "%s successfully dismissed." % message_bit
+        )
+    dismiss.short_description = ugettext('Dismiss selected instances')
+
     def get_readonly_fields(self, request, obj=None):
         return models.Refund.get_readonly_fields(obj)
 
@@ -127,7 +191,7 @@ class RefundAdmin(admin.ModelAdmin):
 @admin.register(models.Charge)
 class ChargeAdmin(admin.ModelAdmin):
     model = models.Charge
-    actions = ['refresh', 'capture', 'refund']
+    actions = ['refresh', 'capture', 'refund', 'dismiss', ]
     list_display = ('pk', 'openpay_id', 'customer', 'card', 'amount',
                     'creation_date')
 
@@ -176,6 +240,22 @@ class ChargeAdmin(admin.ModelAdmin):
                 "%s successfully refunded." % message_bit
             )
     refund.short_description = ugettext('Refund selected charges')
+
+    def dismiss(self, request, queryset):
+        dismissed = 0
+        for instance in queryset:
+            instance.skip_signal = True
+            instance.op_dismiss(save=True)
+            dismissed = dismissed + 1
+        if captured == 1:
+            message_bit = "1 instance was"
+        else:
+            message_bit = "%s instances were" % dismissed
+        self.message_user(
+            request,
+            "%s successfully dismissed." % message_bit
+        )
+    dismiss.short_description = ugettext('Dismiss selected instances')
 
     def get_readonly_fields(self, request, obj=None):
         return models.Charge.get_readonly_fields(obj)

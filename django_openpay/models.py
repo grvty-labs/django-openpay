@@ -9,7 +9,7 @@ from django.utils.dateparse import parse_datetime, parse_date
 from decimal import Decimal
 from jsonfield import JSONField
 
-from . import openpay, hardcode, ugettext_lazy, exceptions
+from . import openpay, hardcode, ugettext_lazy, exceptions, ungettext_lazy
 from .decorators import skippable
 from .utils import get_customer_model
 
@@ -43,6 +43,12 @@ class AbstractOpenpayBase(models.Model):
     def get_readonly_fields(self, instance=None):
         raise NotImplementedError
 
+    @property
+    def op_dismissable(self):
+        if self.openpay_id:
+            return True
+        return False
+
     def op_commit(self):
         # Save the changes in the object directly to the openpay servers
         raise NotImplementedError
@@ -64,14 +70,18 @@ class AbstractOpenpayBase(models.Model):
         # If the Openpay data has not been loaded, call op_load.
         raise NotImplementedError
 
-    def op_dismiss(self):
+    def op_dismiss(self, save=False):
         # Execute the removal of the openpay object (in the openpay server),
         # this same removal could be a logical or physical destruction, but the
         # way to call it is the same.
-        if self.openpay_id:
+        if self.op_dismissable:
             if not hasattr(self, '_op_'):
                 self.op_load()
             self._op_.delete()
+
+            if save:
+                self.skip_signal = True
+                self.save()
 
 
 class Address(models.Model):
@@ -138,6 +148,7 @@ class Address(models.Model):
         return data
 
 
+# class Customer(AbstractOpenpayBase):
 class AbstractCustomer(AbstractOpenpayBase):
     first_name = models.CharField(
         max_length=60,
@@ -251,6 +262,7 @@ def customer_presave(sender, instance=None, **kwargs):
 
 
 @receiver(pre_delete, sender=CustomerModel)
+@skippable
 def customer_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
@@ -276,6 +288,19 @@ class Card(AbstractOpenpayBase):
         blank=False,
         null=False,
         verbose_name=ugettext_lazy('Number'))
+    bank_name = models.CharField(
+        default='',
+        max_length=30,
+        blank=False,
+        null=False,
+        verbose_name=ugettext_lazy('Bank name'))
+    brand = models.CharField(
+        default=hardcode.card_brands_unknown,
+        choices=hardcode.card_brands,
+        max_length=20,
+        blank=False,
+        null=False,
+        verbose_name=ugettext_lazy('Brand'))
     month = models.CharField(
         max_length=3,
         blank=True,
@@ -297,9 +322,9 @@ class Card(AbstractOpenpayBase):
     def get_readonly_fields(self, instance=None):
         if instance:
             return ['openpay_id', 'card_type', 'holder', 'number', 'month',
-                    'year', 'customer', 'creation_date']
+                    'bank_name', 'brand', 'year', 'customer', 'creation_date']
         return ['openpay_id', 'card_type', 'holder', 'number', 'month', 'year',
-                'customer', 'creation_date']
+                'bank_name', 'brand', 'customer', 'creation_date']
 
     @classmethod
     def create_with_token(cls, customerId, tokenId, deviceId, alias=''):
@@ -339,6 +364,8 @@ class Card(AbstractOpenpayBase):
         self.card_type = self._op_.type
         self.holder = self._op_.holder_name
         self.number = self._op_.card_number[-4:]
+        self.bank_name = self._op_.bank_name
+        self.brand = self._op_.brand
         self.month = self._op_.expiration_month[-2:]
         self.year = self._op_.expiration_year[-2:]
         self.creation_date = parse_datetime(
@@ -357,6 +384,7 @@ def card_presave(sender, instance=None, **kwargs):
 
 
 @receiver(post_delete, sender=Card)
+@skippable
 def card_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
@@ -373,6 +401,13 @@ class Plan(AbstractOpenpayBase):
         blank=False,
         null=False,
         verbose_name=ugettext_lazy('Amount'))
+    currency = models.CharField(
+        default=hardcode.plan_currency_mxn,
+        choices=hardcode.plan_currency,
+        max_length=8,
+        blank=True,
+        null=False,
+        verbose_name=ugettext_lazy('Currency'))
     retry_times = models.IntegerField(
         default=3,
         blank=True,
@@ -388,6 +423,7 @@ class Plan(AbstractOpenpayBase):
         null=False,
         verbose_name=ugettext_lazy('Description'))
     benefits = JSONField(
+        default=dict(),
         blank=True,
         null=False,
         verbose_name=ugettext_lazy('Benefits (as JSON)'))
@@ -423,10 +459,20 @@ class Plan(AbstractOpenpayBase):
         null=False,
         verbose_name=ugettext_lazy('Frecuency Unit'))
 
+    @property
+    def repeat_verbose(self):
+        return ungettext_lazy(
+            '%(repeat_unit)s',
+            '%(repeat_every)d %(repeat_unit)s',
+            self.repeat_every) % {
+            'repeat_every': self.repeat_every,
+            'repeat_unit': self.get_repeat_unit_display(),
+        }
+
     @classmethod
     def get_readonly_fields(self, instance=None):
         if instance:
-            return ['openpay_id', 'amount', 'retry_times',
+            return ['openpay_id', 'amount', 'currency', 'retry_times',
                     'status_after_retry', 'repeat_every', 'repeat_unit',
                     'creation_date']
         return ['openpay_id', 'creation_date']
@@ -443,6 +489,7 @@ class Plan(AbstractOpenpayBase):
             self._op_ = openpay.Plan.create(
                 name=self.name,
                 amount=str(self.amount),
+                currency=self.currency,
                 status_after_retry=self.status_after_retry,
                 retry_times=self.retry_times,
                 repeat_unit=self.repeat_unit,
@@ -482,6 +529,7 @@ def plan_presave(sender, instance=None, **kwargs):
 
 
 @receiver(post_delete, sender=Plan)
+@skippable
 def plan_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
@@ -510,10 +558,14 @@ class Subscription(AbstractOpenpayBase):
         blank=True,
         null=False,
         verbose_name=ugettext_lazy('Cancel at the end of period'))
+    latest_charge_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=ugettext_lazy('Previous charge date'))
     charge_date = models.DateField(
         blank=True,
         null=True,
-        verbose_name=ugettext_lazy('Charge date'))
+        verbose_name=ugettext_lazy('Next charge date'))
     period_end_date = models.DateField(
         blank=True,
         null=True,
@@ -539,10 +591,17 @@ class Subscription(AbstractOpenpayBase):
     def get_readonly_fields(self, instance=None):
         if instance:
             return ['openpay_id', 'customer', 'plan', 'charge_date',
-                    'period_end_date', 'status', 'current_period_number',
-                    'creation_date']
+                    'latest_charge_date', 'period_end_date', 'status',
+                    'current_period_number', 'creation_date']
         return ['openpay_id', 'charge_date', 'period_end_date', 'status',
-                'current_period_number', 'creation_date']
+                'latest_charge_date', 'current_period_number', 'creation_date']
+
+    @property
+    def op_dismissable(self):
+        if self.openpay_id and \
+                self.status != hardcode.subscription_status_cancelled:
+            return True
+        return False
 
     def op_commit(self):
         if self.openpay_id:
@@ -591,8 +650,12 @@ class Subscription(AbstractOpenpayBase):
             self.op_load()
         self.cancel_at_period_end = \
             self._op_.cancel_at_period_end
-        self.charge_date = parse_date(
+        new_charge_date = parse_date(
             self._op_.charge_date)
+        self.latest_charge_date = self.charge_date if \
+            self.charge_date != new_charge_date else \
+            self.latest_charge_date
+        self.charge_date = new_charge_date
         self.period_end_date = parse_date(
             self._op_.period_end_date)
         self.status = self._op_.status
@@ -618,6 +681,7 @@ def subscription_presave(sender, instance=None, **kwargs):
 
 
 @receiver(post_delete, sender=Subscription)
+@skippable
 def subscription_postdelete(sender, instance, **kwargs):
     instance.op_dismiss()
 
@@ -716,6 +780,12 @@ class AbstractTransaction(AbstractOpenpayBase):
 
 
 class Charge(AbstractTransaction):
+    subscription = models.ForeignKey(
+        Subscription,
+        blank=True,
+        null=True,
+        related_name='charges',
+        verbose_name=ugettext_lazy('Subscription'))
     conciliated = models.BooleanField(
         default=True,
         blank=True,
@@ -738,7 +808,7 @@ class Charge(AbstractTransaction):
             self.op_load()
         self._op_.capture()
 
-    def op_refund(self):
+    def op_refund(self, amount=None):
         if not self.openpay_id:
             raise exceptions.OpenpayObjectDoesNotExist
         if self.method != hardcode.transaction_method_card:
@@ -746,7 +816,7 @@ class Charge(AbstractTransaction):
 
         if not hasattr(self, '_op_'):
             self.op_load()
-        self._op_.refund()
+        self._op_.refund(amount) if amount else self._op_.refund()
 
     def op_commit(self):
         if not self.openpay_id:
@@ -768,18 +838,22 @@ class Charge(AbstractTransaction):
         self.op_fill()
 
     def op_load(self):
-        if not self.customer or not self.customer.openpay_id:
-            raise exceptions.OpenpayNoCustomer
-
         if self.openpay_id:
-            self._op_ = openpay.Customer.retrieve(
-                self.customer.openpay_id
-            ).charges.retrieve(self.openpay_id)
+            if self.customer and self.customer.openpay_id:
+                try:
+                    self._op_ = openpay.Customer.retrieve(
+                        self.customer.openpay_id
+                    ).charges.retrieve(self.openpay_id)
+                except openpay.error.InvalidRequestError:
+                    self._op_ = openpay.Charge.retrieve_as_merchant(
+                        self.openpay_id)
+            else:
+                self._op_ = openpay.Charge.retrieve_as_merchant(
+                    self.openpay_id)
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
     def op_fill(self):
-        # TODO: Pull Customer and Card
         if not hasattr(self, '_op_'):
             self.op_load()
         self.authorization = self._op_.authorization
@@ -797,6 +871,18 @@ class Charge(AbstractTransaction):
         self.currency = self._op_.currency
         self.creation_date = parse_datetime(
             self._op_.creation_date)
+        if hasattr(self._op_, 'subscription_id'):
+            self.subscription = Subscription.objects.get(
+                openpay_id=self._op_.subscription_id)
+        if hasattr(self._op_, 'customer_id'):
+            self.customer = get_customer_model().objects.get(
+                openpay_id=self._op_.customer_id)
+        if hasattr(self._op_, 'card'):
+            self.card = Card.objects.get(
+                openpay_id=self._op_.card.id)
+            if not self.customer and hasattr(self._op_.card, 'customer_id'):
+                self.customer = get_customer_model().objects.get(
+                    openpay_id=self._op_.card.customer_id)
 
     def op_dismiss(self):
         raise NotImplementedError
@@ -811,7 +897,7 @@ def charge_presave(sender, instance=None, **kwargs):
     instance.full_clean()
     if instance.card.customer_id != instance.customer_id:
         raise exceptions.OpenpayNotUserCard
-    instance.push()
+    instance.op_commit()
 
 
 # This WILL FAIL. And that is the point: to prevent the deletion of charges
