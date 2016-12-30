@@ -253,6 +253,25 @@ address_countrycodes = (  # FIXME: Translate from spanish to english
     ('ZW', ugettext_lazy('Zimbabue')),
 )
 
+card_brands_unknown = 'unknown'
+card_brands_visa = 'visa'
+card_brands_mastercard = 'mastercard'
+card_brands_carnet = 'carnet'
+card_brands_american = 'american express'
+card_brands = (
+    (card_brands_unknown, ugettext_lazy('Unknown')),
+    (card_brands_visa, ugettext_lazy('Visa')),
+    (card_brands_mastercard, ugettext_lazy('Mastercard')),
+    (card_brands_carnet, ugettext_lazy('Carnet')),
+    (card_brands_american, ugettext_lazy('American Express')),
+)
+
+plan_currency_mxn = 'MXN'
+plan_currency_usd = 'USD'
+plan_currency = (
+    (plan_currency_mxn, ugettext_lazy('MXN')),
+    (plan_currency_usd, ugettext_lazy('USD')),
+)
 plan_status_active = 'active'
 plan_status_deleted = 'deleted'
 plan_status = (

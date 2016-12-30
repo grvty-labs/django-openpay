@@ -27,11 +27,13 @@ class Command(BaseCommand):
                     dbobj.skip_signal = True
                     dbobj.name = planJson['name']
                     dbobj.amount = Decimal(planJson['amount'])
+                    dbobj.currency = planJson['currency']
                     dbobj.status_after_retry = planJson['status_after_retry']
                     dbobj.retry_times = planJson['retry_times']
                     dbobj.repeat_unit = planJson['repeat_unit']
                     dbobj.trial_days = planJson['trial_days']
                     dbobj.repeat_every = planJson['repeat_every']
+                    dbobj.status = planJson['status']
                     dbobj.creation_date = parse_datetime(
                         planJson['creation_date'])
                     dbobj.save()
@@ -55,6 +57,8 @@ class Command(BaseCommand):
                     dbobj.card_type = cardJson['type']
                     dbobj.holder = cardJson['holder_name']
                     dbobj.number = cardJson['card_number'][-4:]
+                    dbobj.bank_name = cardJson['bank_name']
+                    dbobj.brand = cardJson['brand']
                     dbobj.month = cardJson['expiration_month'][-2:]
                     dbobj.year = cardJson['expiration_year'][-2:]
                     dbobj.creation_date = parse_datetime(
@@ -80,8 +84,12 @@ class Command(BaseCommand):
                     dbobj.card_id = cards[subscriptionJson['card']['id']]
                     dbobj.cancel_at_period_end = \
                         subscriptionJson['cancel_at_period_end']
-                    dbobj.charge_date = parse_date(
+                    new_charge_date = parse_date(
                         subscriptionJson['charge_date'])
+                    dbobj.latest_charge_date = dbobj.charge_date if \
+                        dbobj.charge_date != new_charge_date else \
+                        dbobj.latest_charge_date
+                    dbobj.charge_date = new_charge_date
                     dbobj.period_end_date = parse_date(
                         subscriptionJson['period_end_date'])
                     dbobj.status = subscriptionJson['status']

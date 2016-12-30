@@ -148,7 +148,8 @@ class Address(models.Model):
         return data
 
 
-class AbstractCustomer(AbstractOpenpayBase):
+# class AbstractCustomer(AbstractOpenpayBase):
+class Customer(AbstractOpenpayBase):
     first_name = models.CharField(
         max_length=60,
         blank=False,
@@ -176,8 +177,8 @@ class AbstractCustomer(AbstractOpenpayBase):
         related_name='customer',
         verbose_name=ugettext_lazy('Address'))
 
-    class Meta:
-        abstract = True
+    # class Meta:
+    #     abstract = True
 
     @classmethod
     def get_readonly_fields(self, instance=None):
@@ -287,6 +288,19 @@ class Card(AbstractOpenpayBase):
         blank=False,
         null=False,
         verbose_name=ugettext_lazy('Number'))
+    bank_name = models.CharField(
+        default='',
+        max_length=30,
+        blank=False,
+        null=False,
+        verbose_name=ugettext_lazy('Bank name'))
+    brand = models.CharField(
+        default=hardcode.card_brands_unknown,
+        choices=hardcode.card_brands,
+        max_length=20,
+        blank=False,
+        null=False,
+        verbose_name=ugettext_lazy('Brand'))
     month = models.CharField(
         max_length=3,
         blank=True,
@@ -308,9 +322,9 @@ class Card(AbstractOpenpayBase):
     def get_readonly_fields(self, instance=None):
         if instance:
             return ['openpay_id', 'card_type', 'holder', 'number', 'month',
-                    'year', 'customer', 'creation_date']
+                    'bank_name', 'brand', 'year', 'customer', 'creation_date']
         return ['openpay_id', 'card_type', 'holder', 'number', 'month', 'year',
-                'customer', 'creation_date']
+                'bank_name', 'brand', 'customer', 'creation_date']
 
     @classmethod
     def create_with_token(cls, customerId, tokenId, deviceId, alias=''):
@@ -350,6 +364,8 @@ class Card(AbstractOpenpayBase):
         self.card_type = self._op_.type
         self.holder = self._op_.holder_name
         self.number = self._op_.card_number[-4:]
+        self.bank_name = self._op_.bank_name
+        self.brand = self._op_.brand
         self.month = self._op_.expiration_month[-2:]
         self.year = self._op_.expiration_year[-2:]
         self.creation_date = parse_datetime(
@@ -385,6 +401,13 @@ class Plan(AbstractOpenpayBase):
         blank=False,
         null=False,
         verbose_name=ugettext_lazy('Amount'))
+    currency = models.CharField(
+        default=hardcode.plan_currency_mxn,
+        choices=hardcode.plan_currency,
+        max_length=8,
+        blank=True,
+        null=False,
+        verbose_name=ugettext_lazy('Currency'))
     retry_times = models.IntegerField(
         default=3,
         blank=True,
@@ -400,6 +423,7 @@ class Plan(AbstractOpenpayBase):
         null=False,
         verbose_name=ugettext_lazy('Description'))
     benefits = JSONField(
+        default=dict(),
         blank=True,
         null=False,
         verbose_name=ugettext_lazy('Benefits (as JSON)'))
@@ -435,10 +459,20 @@ class Plan(AbstractOpenpayBase):
         null=False,
         verbose_name=ugettext_lazy('Frecuency Unit'))
 
+    @property
+    def repeat_verbose(self):
+        return ungettext_lazy(
+            '%(repeat_unit)s',
+            '%(repeat_every)d %(repeat_unit)s',
+            self.repeat_every) % {
+            'repeat_every': self.repeat_every,
+            'repeat_unit': self.get_repeat_unit_display(),
+        }
+
     @classmethod
     def get_readonly_fields(self, instance=None):
         if instance:
-            return ['openpay_id', 'amount', 'retry_times',
+            return ['openpay_id', 'amount', 'currency', 'retry_times',
                     'status_after_retry', 'repeat_every', 'repeat_unit',
                     'creation_date']
         return ['openpay_id', 'creation_date']
@@ -455,6 +489,7 @@ class Plan(AbstractOpenpayBase):
             self._op_ = openpay.Plan.create(
                 name=self.name,
                 amount=str(self.amount),
+                currency=self.currency,
                 status_after_retry=self.status_after_retry,
                 retry_times=self.retry_times,
                 repeat_unit=self.repeat_unit,
@@ -523,10 +558,14 @@ class Subscription(AbstractOpenpayBase):
         blank=True,
         null=False,
         verbose_name=ugettext_lazy('Cancel at the end of period'))
+    latest_charge_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name=ugettext_lazy('Previous charge date'))
     charge_date = models.DateField(
         blank=True,
         null=True,
-        verbose_name=ugettext_lazy('Charge date'))
+        verbose_name=ugettext_lazy('Next charge date'))
     period_end_date = models.DateField(
         blank=True,
         null=True,
@@ -552,10 +591,11 @@ class Subscription(AbstractOpenpayBase):
     def get_readonly_fields(self, instance=None):
         if instance:
             return ['openpay_id', 'customer', 'plan', 'charge_date',
-                    'period_end_date', 'status', 'current_period_number',
-                    'creation_date']
+                    'latest_charge_date', 'period_end_date', 'status',
+                    'current_period_number', 'creation_date']
         return ['openpay_id', 'charge_date', 'period_end_date', 'status',
-                'current_period_number', 'creation_date']
+                'latest_charge_date', 'current_period_number', 'creation_date']
+
     @property
     def op_dismissable(self):
         if self.openpay_id and \
@@ -610,8 +650,12 @@ class Subscription(AbstractOpenpayBase):
             self.op_load()
         self.cancel_at_period_end = \
             self._op_.cancel_at_period_end
-        self.charge_date = parse_date(
+        new_charge_date = parse_date(
             self._op_.charge_date)
+        self.latest_charge_date = self.charge_date if \
+            self.charge_date != new_charge_date else \
+            self.latest_charge_date
+        self.charge_date = new_charge_date
         self.period_end_date = parse_date(
             self._op_.period_end_date)
         self.status = self._op_.status

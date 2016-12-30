@@ -13,6 +13,9 @@ package.
     model was not pulling the Customer, Card and Subscription information.
     *   Making the **BasicAuth** protection for the webhooks unnecessary,
     although it is highly recommended.
+    *   Added fields to the models: `Card`, `Plan` and `Subscription`. This
+    fields where added to manage the plan upgrade/downgrade in another
+    project, although they should be helpful for every situation.
 
 
 *   v1.0.1
