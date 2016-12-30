@@ -33,10 +33,7 @@ class HttpResponseUnauthorized(HttpResponse):
     status_code = 401
 
     def __init__(self):
-        super(HttpResponseUnauthorized, self).__init__(
-            """<html><head><title>Basic auth required</title></head>
-               <body><h1>Authorization Required</h1></body></html>""",
-        )
+        super(HttpResponseUnauthorized, self).__init__()
         realm = getattr(settings, 'BASICAUTH_REALM', 'Secure resource')
         self['WWW-Authenticate'] = 'Basic realm="{}"'.format(realm)
 
@@ -74,6 +71,9 @@ def validate_request(request):
     # Returns:
     #     - None if authentication failed
     #     - the validated username otherwise
+    if not getattr(settings, 'OPENPAY_BASICAUTH_USERS', None):
+        return True
+
     if 'HTTP_AUTHORIZATION' not in request.META:
         return None
 

@@ -11,6 +11,8 @@ package.
     *   The **webhooks** section and `Charge` model were fixed. The webhooks
     hadn't been connected to the `AbstractCustomer` model, while the `Charge`
     model was not pulling the Customer, Card and Subscription information.
+    *   Making the **BasicAuth** protection for the webhooks unnecessary,
+    although it is highly recommended.
 
 
 *   v1.0.1
