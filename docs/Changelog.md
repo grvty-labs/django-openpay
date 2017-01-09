@@ -2,8 +2,14 @@ Changelog
 ==========
 
 This is **django-openpay**'s changelog: The place where you can read about the
-new releases and how they could impact your current installations of this
+new releases and how they could impact your current installation of this
 package.
+
+
+*   v1.1.1
+    *   Apparently there was a major problem involving the `op_refresh`ing
+    of the models if they had been `op_dismiss`ed before. This release has the
+    intention to prevent further problems with this aspect. 
 
 
 *   v1.1.0
