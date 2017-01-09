@@ -21,7 +21,7 @@ class CardAdmin(admin.ModelAdmin):
     model = models.Card
     actions = ['refresh', 'dismiss', ]
     list_display = ('pk', 'openpay_id', 'alias', 'holder', 'customer',
-                    'creation_date')
+                    'creation_date', 'deleted')
 
     def refresh(self, request, queryset):
         refreshed = 0
@@ -45,7 +45,7 @@ class CardAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_dismiss(save=True)
             dismissed = dismissed + 1
-        if captured == 1:
+        if dismissed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % dismissed
@@ -64,7 +64,7 @@ class PlanAdmin(admin.ModelAdmin):
     model = models.Plan
     actions = ['refresh', 'dismiss', ]
     list_display = ('name', 'openpay_id', 'status', 'amount', 'repeat_every',
-                    'repeat_unit', 'creation_date')
+                    'repeat_unit', 'creation_date', 'deleted')
 
     def refresh(self, request, queryset):
         refreshed = 0
@@ -88,7 +88,7 @@ class PlanAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_dismiss(save=True)
             dismissed = dismissed + 1
-        if captured == 1:
+        if dismissed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % dismissed
@@ -106,8 +106,8 @@ class PlanAdmin(admin.ModelAdmin):
 class SubscriptionAdmin(admin.ModelAdmin):
     model = models.Subscription
     actions = ['refresh', 'dismiss', ]
-    list_display = ('pk', 'openpay_id', 'customer', 'plan', 'card',
-                    'creation_date')
+    list_display = ('pk', 'openpay_id', 'customer', 'plan', 'card', 'status',
+                    'creation_date', 'deleted')
 
     def refresh(self, request, queryset):
         refreshed = 0
@@ -131,7 +131,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_dismiss(save=True)
             dismissed = dismissed + 1
-        if captured == 1:
+        if dismissed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % dismissed
@@ -150,7 +150,7 @@ class RefundAdmin(admin.ModelAdmin):
     model = models.Refund
     actions = ['refresh', 'dismiss', ]
     list_display = ('pk', 'openpay_id', 'customer', 'charge', 'amount',
-                    'creation_date')
+                    'creation_date', 'deleted')
 
     def refresh(self, request, queryset):
         refreshed = 0
@@ -174,7 +174,7 @@ class RefundAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_dismiss(save=True)
             dismissed = dismissed + 1
-        if captured == 1:
+        if dismissed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % dismissed
@@ -193,7 +193,7 @@ class ChargeAdmin(admin.ModelAdmin):
     model = models.Charge
     actions = ['refresh', 'capture', 'refund', 'dismiss', ]
     list_display = ('pk', 'openpay_id', 'customer', 'card', 'amount',
-                    'creation_date')
+                    'creation_date', 'deleted')
 
     def refresh(self, request, queryset):
         refreshed = 0
@@ -247,7 +247,7 @@ class ChargeAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_dismiss(save=True)
             dismissed = dismissed + 1
-        if captured == 1:
+        if dismissed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % dismissed
