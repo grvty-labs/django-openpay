@@ -28,9 +28,14 @@ class AbstractOpenpayBase(models.Model):
         max_length=100,
         blank=True,
         null=False,
-        verbose_name=ugettext_lazy('OpenPay ID'))
+        verbose_name=ugettext_lazy('Openpay ID'))
     # Not using auto_now_add because this is not the date from Django, but
     # the one from Openpay
+    deleted = models.BooleanField(
+        default=False,
+        blank=True,
+        null=False,
+        verbose_name=ugettext_lazy('Deleted from Openpay'))
     creation_date = models.DateTimeField(
         blank=True,
         null=False,
@@ -43,12 +48,6 @@ class AbstractOpenpayBase(models.Model):
     def get_readonly_fields(self, instance=None):
         raise NotImplementedError
 
-    @property
-    def op_dismissable(self):
-        if self.openpay_id:
-            return True
-        return False
-
     def op_commit(self):
         # Save the changes in the object directly to the openpay servers
         raise NotImplementedError
@@ -57,7 +56,8 @@ class AbstractOpenpayBase(models.Model):
         # Call the op_load, and op_fill always. This function is designed to
         # maintain the object updated with what is in the openpay server.
         self.op_load()
-        self.op_fill()
+        if self._op_:
+            self.op_fill()
         if save:
             self.save()
 
@@ -74,14 +74,24 @@ class AbstractOpenpayBase(models.Model):
         # Execute the removal of the openpay object (in the openpay server),
         # this same removal could be a logical or physical destruction, but the
         # way to call it is the same.
-        if self.op_dismissable:
+        if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
-            self._op_.delete()
 
-            if save:
-                self.skip_signal = True
-                self.save()
+            if self._op_:
+                self.op_fill()
+                try:
+                    self._op_.delete()
+                except openpay.error.InvalidRequestError as e:
+                    if e.http_status == 404:
+                        self.deleted = True
+                        self._op_ = None
+                    else:
+                        raise e
+
+        if save:
+            self.skip_signal = True
+            self.save()
 
 
 class Address(models.Model):
@@ -190,7 +200,8 @@ class AbstractCustomer(AbstractOpenpayBase):
         if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
-            return self._op_.cards.all()
+            if self._op_:
+                return self._op_.cards.all()
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
@@ -198,7 +209,8 @@ class AbstractCustomer(AbstractOpenpayBase):
         if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
-            return self._op_.subscriptions.all()
+            if self._op_:
+                return self._op_.subscriptions.all()
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
@@ -206,15 +218,16 @@ class AbstractCustomer(AbstractOpenpayBase):
         if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
-            self._op_.name = self.first_name
-            self._op_.last_name = self.last_name if \
-                self.last_name else None
-            self._op_.email = self.email
-            self._op_.phone_number = self.phone_number if \
-                self.phone_number else None
-            self._op_.address = self.address.json_dict if \
-                self.address else None
-            self._op_.save()
+            if not self.deleted and self._op_:
+                self._op_.name = self.first_name
+                self._op_.last_name = self.last_name if \
+                    self.last_name else None
+                self._op_.email = self.email
+                self._op_.phone_number = self.phone_number if \
+                    self.phone_number else None
+                self._op_.address = self.address.json_dict if \
+                    self.address else None
+                self._op_.save()
 
         else:
             self._op_ = openpay.Customer.create(
@@ -229,19 +242,28 @@ class AbstractCustomer(AbstractOpenpayBase):
 
     def op_load(self):
         if self.openpay_id:
-            self._op_ = openpay.Customer.retrieve(self.openpay_id)
+            try:
+                self._op_ = openpay.Customer.retrieve(self.openpay_id)
+            except openpay.error.InvalidRequestError as e:
+                if e.http_status == 404:
+                    self.deleted = True
+                    self._op_ = None
+                else:
+                    raise e
+
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
     def op_fill(self):
         if not hasattr(self, '_op_'):
             self.op_load()
-        self.first_name = self._op_.name
-        self.last_name = self._op_.last_name
-        self.email = self._op_.email
-        self.phone_number = self._op_.phone_number
-        self.creation_date = parse_datetime(
-            self._op_.creation_date)
+        if self._op_:
+            self.first_name = self._op_.name
+            self.last_name = self._op_.last_name
+            self.email = self._op_.email
+            self.phone_number = self._op_.phone_number
+            self.creation_date = parse_datetime(
+                self._op_.creation_date)
 
     @property
     def full_name(self):
@@ -349,11 +371,18 @@ class Card(AbstractOpenpayBase):
             raise exceptions.OpenpayNoCustomer
 
         if self.openpay_id:
-            self._op_ = openpay.Customer.retrieve(
-                self.customer.openpay_id
-            ).cards.retrieve(
-                self.openpay_id
-            )
+            try:
+                self._op_ = openpay.Customer.retrieve(
+                    self.customer.openpay_id
+                ).cards.retrieve(
+                    self.openpay_id
+                )
+            except openpay.error.InvalidRequestError as e:
+                if e.http_status == 404:
+                    self.deleted = True
+                    self._op_ = None
+                else:
+                    raise e
 
         else:
             raise exceptions.OpenpayObjectDoesNotExist
@@ -361,15 +390,16 @@ class Card(AbstractOpenpayBase):
     def op_fill(self):
         if not hasattr(self, '_op_'):
             self.op_load()
-        self.card_type = self._op_.type
-        self.holder = self._op_.holder_name
-        self.number = self._op_.card_number[-4:]
-        self.bank_name = self._op_.bank_name
-        self.brand = self._op_.brand
-        self.month = self._op_.expiration_month[-2:]
-        self.year = self._op_.expiration_year[-2:]
-        self.creation_date = parse_datetime(
-            self._op_.creation_date)
+        if self._op_:
+            self.card_type = self._op_.type
+            self.holder = self._op_.holder_name
+            self.number = self._op_.card_number[-4:]
+            self.bank_name = self._op_.bank_name
+            self.brand = self._op_.brand
+            self.month = self._op_.expiration_month[-2:]
+            self.year = self._op_.expiration_year[-2:]
+            self.creation_date = parse_datetime(
+                self._op_.creation_date)
 
     def __str__(self):
         if self.alias:
@@ -481,9 +511,10 @@ class Plan(AbstractOpenpayBase):
         if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
-            self._op_.name = self.name
-            self._op_.trial_days = self.trial_days
-            self._op_.save()
+            if not self.deleted and self._op_:
+                self._op_.name = self.name
+                self._op_.trial_days = self.trial_days
+                self._op_.save()
 
         else:
             self._op_ = openpay.Plan.create(
@@ -500,22 +531,30 @@ class Plan(AbstractOpenpayBase):
 
     def op_load(self):
         if self.openpay_id:
-            self._op_ = openpay.Plan.retrieve(self.openpay_id)
+            try:
+                self._op_ = openpay.Plan.retrieve(self.openpay_id)
+            except openpay.error.InvalidRequestError as e:
+                if e.http_status == 404:
+                    self.deleted = True
+                    self._op_ = None
+                else:
+                    raise e
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
     def op_fill(self):
         if not hasattr(self, '_op_'):
             self.op_load()
-        self.name = self._op_.name
-        self.amount = Decimal(self._op_.amount)
-        self.status_after_retry = self._op_.status_after_retry
-        self.retry_times = self._op_.retry_times
-        self.repeat_unit = self._op_.repeat_unit
-        self.trial_days = self._op_.trial_days
-        self.repeat_every = self._op_.repeat_every
-        self.creation_date = parse_datetime(
-            self._op_.creation_date)
+        if self._op_:
+            self.name = self._op_.name
+            self.amount = Decimal(self._op_.amount)
+            self.status_after_retry = self._op_.status_after_retry
+            self.retry_times = self._op_.retry_times
+            self.repeat_unit = self._op_.repeat_unit
+            self.trial_days = self._op_.trial_days
+            self.repeat_every = self._op_.repeat_every
+            self.creation_date = parse_datetime(
+                self._op_.creation_date)
 
     def __str__(self):
         return self.name
@@ -596,24 +635,18 @@ class Subscription(AbstractOpenpayBase):
         return ['openpay_id', 'charge_date', 'period_end_date', 'status',
                 'latest_charge_date', 'current_period_number', 'creation_date']
 
-    @property
-    def op_dismissable(self):
-        if self.openpay_id and \
-                self.status != hardcode.subscription_status_cancelled:
-            return True
-        return False
-
     def op_commit(self):
         if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
-            self._op_.trial_end_date = \
-                self.trial_end_date.isoformat()
-            self._op_.card = None
-            self._op_.card_id = self.card.openpay_id
-            self._op_.cancel_at_period_end = \
-                self.cancel_at_period_end
-            self._op_.save()
+            if not self.deleted and self._op_:
+                self._op_.trial_end_date = \
+                    self.trial_end_date.isoformat()
+                self._op_.card = None
+                self._op_.card_id = self.card.openpay_id
+                self._op_.cancel_at_period_end = \
+                    self.cancel_at_period_end
+                self._op_.save()
 
         else:
             if not self.customer or not self.customer.openpay_id:
@@ -639,31 +672,40 @@ class Subscription(AbstractOpenpayBase):
             raise exceptions.OpenpayNoCustomer
 
         if self.openpay_id:
-            self._op_ = openpay.Customer.retrieve(
-                self.customer.openpay_id
-            ).subscriptions.retrieve(self.openpay_id)
+            try:
+                self._op_ = openpay.Customer.retrieve(
+                    self.customer.openpay_id
+                ).subscriptions.retrieve(self.openpay_id)
+            except openpay.error.InvalidRequestError as e:
+                if e.http_status == 404:
+                    self.deleted = True
+                    self._op_ = None
+                else:
+                    raise e
+
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
     def op_fill(self):
         if not hasattr(self, '_op_'):
             self.op_load()
-        self.cancel_at_period_end = \
-            self._op_.cancel_at_period_end
-        new_charge_date = parse_date(
-            self._op_.charge_date)
-        self.latest_charge_date = self.charge_date if \
-            self.charge_date != new_charge_date else \
-            self.latest_charge_date
-        self.charge_date = new_charge_date
-        self.period_end_date = parse_date(
-            self._op_.period_end_date)
-        self.status = self._op_.status
-        self.current_period_number = self._op_.current_period_number
-        self.trial_end_date = parse_date(
-            self._op_.trial_end_date)
-        self.creation_date = parse_datetime(
-            self._op_.creation_date)
+        if self._op_:
+            self.cancel_at_period_end = \
+                self._op_.cancel_at_period_end
+            new_charge_date = parse_date(
+                self._op_.charge_date)
+            self.latest_charge_date = self.charge_date if \
+                self.charge_date != new_charge_date else \
+                self.latest_charge_date
+            self.charge_date = new_charge_date
+            self.period_end_date = parse_date(
+                self._op_.period_end_date)
+            self.status = self._op_.status
+            self.current_period_number = self._op_.current_period_number
+            self.trial_end_date = parse_date(
+                self._op_.trial_end_date)
+            self.creation_date = parse_datetime(
+                self._op_.creation_date)
 
     def __str__(self):
         return '{plan} |> {customer}'.format(
@@ -806,7 +848,8 @@ class Charge(AbstractTransaction):
 
         if not hasattr(self, '_op_'):
             self.op_load()
-        self._op_.capture()
+        if not self.deleted and self._op_:
+            self._op_.capture()
 
     def op_refund(self, amount=None):
         if not self.openpay_id:
@@ -816,7 +859,8 @@ class Charge(AbstractTransaction):
 
         if not hasattr(self, '_op_'):
             self.op_load()
-        self._op_.refund(amount) if amount else self._op_.refund()
+        if not self.deleted and self._op_:
+            self._op_.refund(amount) if amount else self._op_.refund()
 
     def op_commit(self):
         if not self.openpay_id:
@@ -845,47 +889,62 @@ class Charge(AbstractTransaction):
                         self.customer.openpay_id
                     ).charges.retrieve(self.openpay_id)
                 except openpay.error.InvalidRequestError:
+                    try:
+                        self._op_ = openpay.Charge.retrieve_as_merchant(
+                            self.openpay_id)
+                    except openpay.error.InvalidRequestError as e:
+                        if e.http_status == 404:
+                            self.deleted = True
+                            self._op_ = None
+                        else:
+                            raise e
+
+            else:
+                try:
                     self._op_ = openpay.Charge.retrieve_as_merchant(
                         self.openpay_id)
-            else:
-                self._op_ = openpay.Charge.retrieve_as_merchant(
-                    self.openpay_id)
+                except openpay.error.InvalidRequestError as e:
+                    if e.http_status == 404:
+                        self.deleted = True
+                        self._op_ = None
+                    else:
+                        raise e
+
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
     def op_fill(self):
         if not hasattr(self, '_op_'):
             self.op_load()
-        self.authorization = self._op_.authorization
-        self.operation_type = self._op_.operation_type
-        self.transaction_type = self._op_.transaction_type
-        self.status = self._op_.status
-        self.conciliated = self._op_.conciliated
-        self.operation_date = parse_datetime(
-            self._op_.operation_date)
-        self.description = self._op_.description
-        self.error_message = self._op_.error_message
-        self.order_id = self._op_.order_id
-        self.amount = Decimal(self._op_.amount)
-        self.method = self._op_.method
-        self.currency = self._op_.currency
-        self.creation_date = parse_datetime(
-            self._op_.creation_date)
-        if hasattr(self._op_, 'subscription_id'):
-            self.subscription = Subscription.objects.get(
-                openpay_id=self._op_.subscription_id)
-        if hasattr(self._op_, 'customer_id'):
-            self.customer = get_customer_model().objects.get(
-                openpay_id=self._op_.customer_id)
-        if hasattr(self._op_, 'card'):
-            self.card = Card.objects.get(
-                openpay_id=self._op_.card.id)
-            if not self.customer and hasattr(self._op_.card, 'customer_id'):
+        if self._op_:
+            self.authorization = self._op_.authorization
+            self.operation_type = self._op_.operation_type
+            self.transaction_type = self._op_.transaction_type
+            self.status = self._op_.status
+            self.conciliated = self._op_.conciliated
+            self.operation_date = parse_datetime(
+                self._op_.operation_date)
+            self.description = self._op_.description
+            self.error_message = self._op_.error_message
+            self.order_id = self._op_.order_id
+            self.amount = Decimal(self._op_.amount)
+            self.method = self._op_.method
+            self.currency = self._op_.currency
+            self.creation_date = parse_datetime(
+                self._op_.creation_date)
+            if hasattr(self._op_, 'subscription_id'):
+                self.subscription = Subscription.objects.get(
+                    openpay_id=self._op_.subscription_id)
+            if hasattr(self._op_, 'customer_id'):
                 self.customer = get_customer_model().objects.get(
-                    openpay_id=self._op_.card.customer_id)
-
-    def op_dismiss(self):
-        raise NotImplementedError
+                    openpay_id=self._op_.customer_id)
+            if hasattr(self._op_, 'card'):
+                self.card = Card.objects.get(
+                    openpay_id=self._op_.card.id)
+                if not self.customer and hasattr(
+                        self._op_.card, 'customer_id'):
+                    self.customer = get_customer_model().objects.get(
+                        openpay_id=self._op_.card.customer_id)
 
     def __str__(self):
         return self.openpay_id

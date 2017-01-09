@@ -2,7 +2,7 @@ Changelog
 ==========
 
 This is **django-openpay**'s changelog: The place where you can read about the
-new releases and how they could impact your current installations of this
+new releases and how they could impact your current installation of this
 package.
 
 

@@ -17,6 +17,7 @@ class Command(BaseCommand):
         plansList = djop.openpay.Plan.all()
         if plansList.get('count', 0) > 0:
             for planJson in plansList.get('data', []):
+                dbobj = None
                 try:
                     dbobj = djop.models.Plan.objects.get(
                         openpay_id=planJson['id'])

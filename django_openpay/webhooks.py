@@ -1,10 +1,13 @@
 from django.utils.dateparse import parse_datetime, parse_date
+import logging
 
 from . import models
 
+logger = logging.getLogger(__name__)
+
 
 def verification(body):
-    print(body['verification_code'])
+    logger.info(body['verification_code'])
 
 
 def chargeRefunded(body):
