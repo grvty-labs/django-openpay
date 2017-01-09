@@ -6,6 +6,12 @@ new releases and how they could impact your current installation of this
 package.
 
 
+*   v1.1.1
+    *   Apparently there was a major problem involving the `op_refresh`ing
+    of the models if they had been `op_dismiss`ed before. This release has the
+    intention to prevent further problems with this aspect. 
+
+
 *   v1.1.0
     *   Improved the **dismiss** feature, although it is not yet finished.
     *   The **webhooks** section and `Charge` model were fixed. The webhooks
