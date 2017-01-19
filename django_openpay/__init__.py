@@ -13,7 +13,7 @@ def start():
     OPENPAY_VERIFY_SSL = getattr(settings, 'OPENPAY_VERIFY_SSL', None)
     OPENPAY_MERCHANT_ID = getattr(settings, 'OPENPAY_MERCHANT_ID', None)
     OPENPAY_DEVICE_ID = getattr(settings, 'OPENPAY_DEVICE_ID', None)
-    DEBUG = getattr(settings, 'DEBUG', None)
+    OPENPAY_PRODUCTION = getattr(settings, 'OPENPAY_PRODUCTION', None)
     # OPENPAY_BASICAUTH_USERS = getattr(
     #     settings, 'OPENPAY_BASICAUTH_USERS', None)
     OPENPAY_CUSTOMER_MODEL = getattr(
@@ -36,9 +36,9 @@ def start():
             "OPENPAY_DEVICE_ID must be defined and must have a length between "
             "1 and 32 characters. (String)"
         )
-    if DEBUG not in [True, False]:
+    if OPENPAY_PRODUCTION not in [True, False]:
         raise ImproperlyConfigured(
-            "DEBUG must be defined. (Boolean)"
+            "OPENPAY_PRODUCTION must be defined. (Boolean)"
         )
     # if not OPENPAY_BASICAUTH_USERS:
     #     raise ImproperlyConfigured(
@@ -53,6 +53,6 @@ def start():
     openpay.verify_ssl_certs = OPENPAY_VERIFY_SSL
     openpay.merchant_id = OPENPAY_MERCHANT_ID
     openpay.device_id = OPENPAY_DEVICE_ID
-    openpay.production = not DEBUG
+    openpay.production = OPENPAY_PRODUCTION
 
 start()
