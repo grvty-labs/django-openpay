@@ -82,6 +82,7 @@ class AbstractOpenpayBase(models.Model):
                 self.op_fill()
                 try:
                     self._op_.delete()
+                    self.deleted = True
                 except openpay.error.InvalidRequestError as e:
                     if e.http_status == 404:
                         self.deleted = True
@@ -494,7 +495,7 @@ class Plan(AbstractOpenpayBase):
         return ungettext_lazy(
             '%(repeat_unit)s',
             '%(repeat_every)d %(repeat_unit)s',
-            self.repeat_every) % {
+            'repeat_every') % {
             'repeat_every': self.repeat_every,
             'repeat_unit': self.get_repeat_unit_display(),
         }
