@@ -257,13 +257,15 @@ card_brands_unknown = 'unknown'
 card_brands_visa = 'visa'
 card_brands_mastercard = 'mastercard'
 card_brands_carnet = 'carnet'
-card_brands_american = 'american express'
+card_brands_american = 'american_express'
+card_brands_american2 = 'american express'
 card_brands = (
     (card_brands_unknown, ugettext_lazy('Unknown')),
     (card_brands_visa, ugettext_lazy('Visa')),
     (card_brands_mastercard, ugettext_lazy('Mastercard')),
     (card_brands_carnet, ugettext_lazy('Carnet')),
     (card_brands_american, ugettext_lazy('American Express')),
+    (card_brands_american2, ugettext_lazy('American Express')),
 )
 
 plan_currency_mxn = 'MXN'
