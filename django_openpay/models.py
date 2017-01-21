@@ -27,7 +27,6 @@ class AbstractOpenpayBase(models.Model):
     openpay_id = models.CharField(
         max_length=100,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Openpay ID'))
     # Not using auto_now_add because this is not the date from Django, but
     # the one from Openpay
@@ -65,6 +64,13 @@ class AbstractOpenpayBase(models.Model):
         # Pull the Openpay data, always
         raise NotImplementedError
 
+    def op_nones2str(self, items):
+        for k in items:
+            v = getattr(self._op_, k)
+            if v is None:
+                v = 'Desconocido'
+                setattr(self._op_, k, v)
+
     def op_fill(self):
         # Only update the object's fields with the openpay data.
         # If the Openpay data has not been loaded, call op_load.
@@ -98,26 +104,21 @@ class AbstractOpenpayBase(models.Model):
 class Address(models.Model):
     city = models.TextField(
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('City'))
     state = models.TextField(
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('State'))
     line1 = models.CharField(
         max_length=100,
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('Street (Line 1)'))
     line2 = models.CharField(
         max_length=100,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Street (Line 2)'))
     line3 = models.CharField(
         max_length=100,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Street (Line 3)'))
     postal_code = models.IntegerField(
         blank=False,
@@ -128,7 +129,6 @@ class Address(models.Model):
         default='MX',
         max_length=5,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Country'))
     creation_date = models.DateTimeField(
         auto_now_add=True,
@@ -164,12 +164,10 @@ class AbstractCustomer(AbstractOpenpayBase):
     first_name = models.CharField(
         max_length=60,
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('First Name'))
     last_name = models.CharField(
         max_length=60,
         blank=True,
-        null=True,
         verbose_name=ugettext_lazy('Last Name'))
     email = models.EmailField(
         blank=False,
@@ -179,7 +177,6 @@ class AbstractCustomer(AbstractOpenpayBase):
         validators=[phone_validator],
         max_length=15,
         blank=True,
-        null=True,
         verbose_name=ugettext_lazy('Phone Number'))
     address = models.OneToOneField(
         Address,
@@ -259,6 +256,7 @@ class AbstractCustomer(AbstractOpenpayBase):
         if not hasattr(self, '_op_'):
             self.op_load()
         if self._op_:
+            self.op_nones2str(['name', 'last_name', 'phone_number'])
             self.first_name = self._op_.name
             self.last_name = self._op_.last_name
             self.email = self._op_.email
@@ -294,50 +292,41 @@ class Card(AbstractOpenpayBase):
     alias = models.CharField(
         max_length=100,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Alias'))
     card_type = models.CharField(
         max_length=15,
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('Card type'))
     holder = models.CharField(
         max_length=100,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Holder name'))
     number = models.CharField(
         max_length=5,
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('Number'))
     bank_name = models.CharField(
         default='',
         max_length=30,
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('Bank name'))
     brand = models.CharField(
         default=hardcode.card_brands_unknown,
         choices=hardcode.card_brands,
         max_length=20,
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('Brand'))
     month = models.CharField(
         max_length=3,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Expiration month'))
     year = models.CharField(
         max_length=3,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Expiration year'))
     customer = models.ForeignKey(
         CustomerModel,
         blank=False,
-        null=False,
         related_name='cards',
         verbose_name=ugettext_lazy('Owner'))
 
@@ -392,6 +381,9 @@ class Card(AbstractOpenpayBase):
         if not hasattr(self, '_op_'):
             self.op_load()
         if self._op_:
+            self.op_nones2str([
+                'type', 'holder_name', 'bank_name', 'expiration_month',
+                'expiration_year'])
             self.card_type = self._op_.type
             self.holder = self._op_.holder_name
             self.number = self._op_.card_number[-4:]
@@ -424,7 +416,6 @@ class Plan(AbstractOpenpayBase):
     name = models.CharField(
         max_length=60,
         blank=False,
-        null=False,
         verbose_name=ugettext_lazy('Name'))
     amount = models.DecimalField(
         decimal_places=2,
@@ -437,7 +428,6 @@ class Plan(AbstractOpenpayBase):
         choices=hardcode.plan_currency,
         max_length=8,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Currency'))
     retry_times = models.IntegerField(
         default=3,
@@ -447,30 +437,25 @@ class Plan(AbstractOpenpayBase):
     excerpt = models.CharField(
         max_length=250,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Excerpt'))
     description = models.TextField(
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Description'))
     benefits = JSONField(
         default=dict(),
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Benefits (as JSON)'))
     status = models.CharField(
         choices=hardcode.plan_status,
         default=hardcode.plan_status_active,
         max_length=9,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Status'))
     status_after_retry = models.CharField(
         choices=hardcode.plan_statusafter,
         default=hardcode.plan_statusafter_unpaid,
         max_length=11,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Status when retries are exhausted'))
     trial_days = models.IntegerField(
         default=0,
@@ -487,7 +472,6 @@ class Plan(AbstractOpenpayBase):
         default=hardcode.plan_repeatunit_month,
         max_length=15,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Frecuency Unit'))
 
     @property
@@ -547,6 +531,7 @@ class Plan(AbstractOpenpayBase):
         if not hasattr(self, '_op_'):
             self.op_load()
         if self._op_:
+            self.op_nones2str(['name'])
             self.name = self._op_.name
             self.amount = Decimal(self._op_.amount)
             self.status_after_retry = self._op_.status_after_retry
@@ -615,7 +600,6 @@ class Subscription(AbstractOpenpayBase):
         choices=hardcode.subscription_status,
         max_length=10,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Status'))
     current_period_number = models.IntegerField(
         default=0,
@@ -691,6 +675,7 @@ class Subscription(AbstractOpenpayBase):
         if not hasattr(self, '_op_'):
             self.op_load()
         if self._op_:
+            # self.op_nones2str([])
             self.cancel_at_period_end = \
                 self._op_.cancel_at_period_end
             new_charge_date = parse_date(
@@ -733,40 +718,34 @@ class AbstractTransaction(AbstractOpenpayBase):
     authorization = models.CharField(
         max_length=10,
         blank=True,
-        null=True,
         verbose_name=ugettext_lazy('Authorization'))
     transaction_type = models.CharField(
         default=hardcode.transaction_ttype_charge,
         choices=hardcode.transaction_ttype,
         max_length=10,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Transaction Type'))
     operation_type = models.CharField(
         default=hardcode.transaction_otype_in,
         choices=hardcode.transaction_otype,
         max_length=4,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Operation Type'))
     method = models.CharField(
         default=hardcode.transaction_method_card,
         choices=hardcode.transaction_method,
         max_length=10,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Method'))
     order_id = models.CharField(
         max_length=20,
         blank=True,
-        null=True,
         verbose_name=ugettext_lazy('Order ID'))
     status = models.CharField(
         default=hardcode.transaction_status_inprogress,
         choices=hardcode.transaction_status,
         max_length=14,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Status'))
     amount = models.DecimalField(
         decimal_places=2,
@@ -776,11 +755,9 @@ class AbstractTransaction(AbstractOpenpayBase):
         verbose_name=ugettext_lazy('Amount'))
     description = models.TextField(
         blank=True,
-        null=True,
         verbose_name=ugettext_lazy('Description'))
     error_message = models.TextField(
         blank=True,
-        null=True,
         verbose_name=ugettext_lazy('Error Message'))
     customer = models.ForeignKey(
         CustomerModel,
@@ -792,7 +769,6 @@ class AbstractTransaction(AbstractOpenpayBase):
         choices=hardcode.transaction_currency,
         max_length=8,
         blank=True,
-        null=False,
         verbose_name=ugettext_lazy('Currency'))
     # TODO: bank_account
     card = models.ForeignKey(
@@ -918,6 +894,8 @@ class Charge(AbstractTransaction):
         if not hasattr(self, '_op_'):
             self.op_load()
         if self._op_:
+            self.op_nones2str([
+                'authorization', 'order_id', 'description', 'error_message'])
             self.authorization = self._op_.authorization
             self.operation_type = self._op_.operation_type
             self.transaction_type = self._op_.transaction_type
