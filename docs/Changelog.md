@@ -5,11 +5,40 @@ This is **django-openpay**'s changelog: The place where you can read about the
 new releases and how they could impact your current installation of this
 package.
 
+*   v1.1.7
+    *   Apparently the API sends nulls instead of empty strings. This has never
+    been detailed in their documentation. A quickfix was to wrap the `op_fill`
+    function with a null-to-string function.
+    *   Removed all the `null=True|False` from all the CharFields and
+    TextFields inside the models. This might bring some problems to some
+    current systems, so **be careful**. This was done because all of this
+    fields are filled by the Openpay's requests and this option violates the
+    Django standards. We hope this doesn't bring any kind of problem, if it
+    does, you can open an issue and we will rollback the fields you require.
+    *   Another problem thanks to the documentation. The American Express cards
+    raised an exception because, the type of card wasn't the string
+    `"american express"`, it was `"american_express"`. This generated
+    an exception inside the `Card`s `card_type` field. This was a typo made
+    inside the Openpay's documentation. We added the new expected choice
+    instead of changing the previous one, because by this point we cannot
+    really confirm that we will always receive the underscored string.
+
+*   v1.1.2 to v1.1.6
+    *   Fixes over a `ungettext_lazy` function. This bug produced errors
+    inside the locale's compilation. Not a big deal, but we are working in
+    another project using this package and we couldn't let this go away.
+    *   We were missing a `self.deleted = True` statement inside the models'
+    `op_dismiss` function, which was a huge problem when trying to find the
+    deleted or non-deleted objects.
+    *   Error between this releases due to the fact that we updated setuptools
+    and it no longer detects that we are releasing for python3 and tries
+    to just release in python2.
+
 
 *   v1.1.1
     *   Apparently there was a major problem involving the `op_refresh`ing
     of the models if they had been `op_dismiss`ed before. This release has the
-    intention to prevent further problems with this aspect. 
+    intention to prevent further problems with this aspect.
 
 
 *   v1.1.0
