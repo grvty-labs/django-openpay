@@ -837,7 +837,15 @@ class Charge(AbstractTransaction):
         if not hasattr(self, '_op_'):
             self.op_load()
         if not self.deleted and self._op_:
-            self._op_.refund(amount) if amount else self._op_.refund()
+            self._op_.refund(
+                merchant=True,
+                amount=amount,
+                description='Refund for: {} {}'.format(
+                    amount, self.get_currency_display())
+                ) if amount else self._op_.refund(
+                    merchant=True,
+                    description='Refund for: {} {}'.format(
+                        self.amount, self.get_currency_display()))
 
     def op_commit(self):
         if not self.openpay_id:

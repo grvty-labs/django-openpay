@@ -29,7 +29,7 @@ class CardAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_refresh(save=True)
             refreshed = refreshed + 1
-        if captured == 1:
+        if refreshed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % refreshed
@@ -72,7 +72,7 @@ class PlanAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_refresh(save=True)
             refreshed = refreshed + 1
-        if captured == 1:
+        if refreshed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % refreshed
@@ -158,7 +158,7 @@ class RefundAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_refresh(save=True)
             refreshed = refreshed + 1
-        if captured == 1:
+        if refreshed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % refreshed
@@ -201,7 +201,7 @@ class ChargeAdmin(admin.ModelAdmin):
             instance.skip_signal = True
             instance.op_refresh(save=True)
             refreshed = refreshed + 1
-        if captured == 1:
+        if refreshed == 1:
             message_bit = "1 instance was"
         else:
             message_bit = "%s instances were" % refreshed

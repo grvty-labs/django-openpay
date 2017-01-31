@@ -6,15 +6,24 @@ from . import models
 logger = logging.getLogger(__name__)
 
 
+def safeCopy(json, items):
+    for k in json:
+        if k in items:
+            if json[k] is None:
+                json[k] = ''
+    return json
+
+
 def verification(body):
     logger.info(body['verification_code'])
 
 
 def chargeRefunded(body):
-    transaction = body['transaction']
     card = None
     customer = None
     subscription = None
+    transaction = safeCopy(body['transaction'], [
+        'authorization', 'error_message', 'order_id', 'description'])
     if 'customer_id' in transaction:
         customer = models.get_customer_model().objects.get(
             openpay_id=transaction['customer_id'])
@@ -22,8 +31,9 @@ def chargeRefunded(body):
         subscription = models.Subscription.objects.get(
             openpay_id=transaction['subscription_id'])
     if 'card' in transaction:
-        card = models.Card.objects.get(
-            openpay_id=transaction['card']['id'])
+        if 'id' in transaction['card']:
+            card = models.Card.objects.get(
+                openpay_id=transaction['card']['id'])
         if not customer and 'customer_id' in transaction['card']:
             customer = models.get_customer_model().objects.get(
                 openpay_id=transaction['card']['customer_id'])
@@ -47,7 +57,8 @@ def chargeRefunded(body):
             'card': card,
         })
 
-    transaction = transaction['refund']
+    transaction = safeCopy(transaction['refund'], [
+        'authorization', 'error_message', 'order_id', 'description'])
     refund, created = models.Refund.objects.update_or_create(
         openpay_id=transaction['id'],
         defaults={
@@ -70,10 +81,11 @@ def chargeRefunded(body):
 
 
 def chargeCancelled(body):
-    transaction = body['transaction']
     card = None
     customer = None
     subscription = None
+    transaction = safeCopy(body['transaction'], [
+        'authorization', 'error_message', 'order_id', 'description'])
     if 'customer_id' in transaction:
         customer = models.get_customer_model().objects.get(
             openpay_id=transaction['customer_id'])
@@ -81,8 +93,9 @@ def chargeCancelled(body):
         subscription = models.Subscription.objects.get(
             openpay_id=transaction['subscription_id'])
     if 'card' in transaction:
-        card = models.Card.objects.get(
-            openpay_id=transaction['card']['id'])
+        if 'id' in transaction['card']:
+            card = models.Card.objects.get(
+                openpay_id=transaction['card']['id'])
         if not customer and 'customer_id' in transaction['card']:
             customer = models.get_customer_model().objects.get(
                 openpay_id=transaction['card']['customer_id'])
@@ -109,10 +122,11 @@ def chargeCancelled(body):
 
 
 def chargeCreated(body):
-    transaction = body['transaction']
     card = None
     customer = None
     subscription = None
+    transaction = safeCopy(body['transaction'], [
+        'authorization', 'error_message', 'order_id', 'description'])
     if 'customer_id' in transaction:
         customer = models.get_customer_model().objects.get(
             openpay_id=transaction['customer_id'])
@@ -120,8 +134,9 @@ def chargeCreated(body):
         subscription = models.Subscription.objects.get(
             openpay_id=transaction['subscription_id'])
     if 'card' in transaction:
-        card = models.Card.objects.get(
-            openpay_id=transaction['card']['id'])
+        if 'id' in transaction['card']:
+            card = models.Card.objects.get(
+                openpay_id=transaction['card']['id'])
         if not customer and 'customer_id' in transaction['card']:
             customer = models.get_customer_model().objects.get(
                 openpay_id=transaction['card']['customer_id'])
@@ -148,10 +163,11 @@ def chargeCreated(body):
 
 
 def chargeSucceeded(body):
-    transaction = body['transaction']
     card = None
     customer = None
     subscription = None
+    transaction = safeCopy(body['transaction'], [
+        'authorization', 'error_message', 'order_id', 'description'])
     if 'customer_id' in transaction:
         customer = models.get_customer_model().objects.get(
             openpay_id=transaction['customer_id'])
@@ -159,8 +175,9 @@ def chargeSucceeded(body):
         subscription = models.Subscription.objects.get(
             openpay_id=transaction['subscription_id'])
     if 'card' in transaction:
-        card = models.Card.objects.get(
-            openpay_id=transaction['card']['id'])
+        if 'id' in transaction['card']:
+            card = models.Card.objects.get(
+                openpay_id=transaction['card']['id'])
         if not customer and 'customer_id' in transaction['card']:
             customer = models.get_customer_model().objects.get(
                 openpay_id=transaction['card']['customer_id'])
