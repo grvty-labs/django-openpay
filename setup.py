@@ -11,7 +11,7 @@ setup(
     description='Django application which integrates the \
 OpenPay libraries for online transactions',
     long_description=readme,
-    author='GRVTYlabs',
+    author='GRVTY',
     author_email='daniel.ortiz@grvtylabs.com',
     url='https://github.com/grvty-labs/django-openpay',
     packages=find_packages(

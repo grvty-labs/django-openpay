@@ -92,7 +92,7 @@ ENV/
 # REDIS
 dump.rdb
 
-# GRVTYlabs
+# GRVTY
 pip-selfcheck.json
 bin/*
 include/*

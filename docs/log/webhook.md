@@ -396,11 +396,11 @@ Owned and developed by
 
 [![StackShare][stack-shield]][stack-tech]
 
-[![GRVTYlabs][logo]](www.grvtylabs.com)
+[![GRVTY][logo]](http://grvty.digital)
 
-[logo]: https://github.com/grvty-labs/django-openpay/blob/master/logo.png?raw=true "GRVTYlabs"
+[logo]: http://grvty.digital/images/logos/repos-logo-2.png?raw=true "GRVTY"
 [stack-shield]: http://img.shields.io/badge/tech-stack-0690fa.svg?style=flat
-[stack-tech]: http://stackshare.io/letops/grvtylabs
+[stack-tech]: http://stackshare.io/grvty/grvty
 
 [requestbin-page]: https://requestb.in
 [postman-svg]: https://run.pstmn.io/button.svg
