@@ -194,21 +194,21 @@ class AbstractCustomer(AbstractOpenpayBase):
             return ['openpay_id', 'creation_date']
         return ['openpay_id', 'creation_date']
 
-    def op_cards(self):
+    def op_cards(self, offset=0, limit=10):
         if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
             if self._op_:
-                return self._op_.cards.all()
+                return self._op_.cards.all(offset=offset, limit=limit)
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
-    def op_subscriptions(self):
+    def op_subscriptions(self, offset=0, limit=10):
         if self.openpay_id:
             if not hasattr(self, '_op_'):
                 self.op_load()
             if self._op_:
-                return self._op_.subscriptions.all()
+                return self._op_.subscriptions.all(offset=offset, limit=limit)
         else:
             raise exceptions.OpenpayObjectDoesNotExist
 
