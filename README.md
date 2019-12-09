@@ -1,6 +1,18 @@
 **django-openpay**
 ==================
 
+Important Notice
+----------------
+
+Save yourself and don't use Openpay. It is under your own risk to use Openpay, but this project has been deprecated for us (if you want to risk it and maintain this project, please let us know and we will transfer the project).
+
+I have been trying to get a lot of things fixed, but Openpay's documentation is still incomplete, badly written and there are several issues on things that are out of what this library can control (and apparently even the Openpay team). There are 3 main reasons we have stopped working on this project:
+
+1. Openpay has an antifraud system, which blocks certain cards and bank accounts when "something" happens (they say it is related to buying more than 7 times in 15 days). Openpay's support cannot actually tell you why it has happened, but this occurs with clients that have been using the system for a couple of months or a couple minutes. You can request an update to the antifraud policies for your account, so your users stop being blocked, but we have been requesting this change for over a year with no success (for a client of ours who is using this library).
+2. The API documentation doesn't let you know a lot of things, (e.g. when the API doesn't have the info for a specific field sometimes it won't return the field or return it with `null`). We have been requesting changes and we have been invited to their offices to talk about the pains of the documentation, but that was 2 years ago and nothing has changed.
+3. Openpay claims you could build a marketplace system with split-payment, there is nothing written down on how to achieve this but the validation team won't approve an application trying to sort this out because it "is not the right way to do it". If you ask that same validation team what they are looking for or any help to sort it out they will just give you the same API documentation from their website.
+4. The webhooks are badly implemented, this is because sometimes the webhooks will be triggered twice (which will give you a "unique" constraint exception) and sometimes the webhook will send you all the information for a transaction EXCEPT for the payment id.
+
 Django app for online transactions
 ----------------------------------
 
