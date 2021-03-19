@@ -7,7 +7,7 @@ Django==1.10.4
 django-jinja==2.2.1
 django-webpack-loader==0.4.1
 future==0.15.2
-Jinja2==2.8
+Jinja2==2.11.3
 jsonfield==1.0.3
 kombu==4.0.2
 MarkupSafe==0.23
