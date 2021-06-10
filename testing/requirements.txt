@@ -3,7 +3,7 @@ args==0.1.0
 billiard==3.5.0.2
 celery==4.0.2
 clint==0.5.1
-Django==1.10.4
+Django==2.2.24
 django-jinja==2.2.1
 django-webpack-loader==0.4.1
 future==0.15.2
