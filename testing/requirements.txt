@@ -1,7 +1,7 @@
 amqp==2.1.4
 args==0.1.0
 billiard==3.5.0.2
-celery==4.0.2
+celery==5.2.2
 clint==0.5.1
 Django==1.10.4
 django-jinja==2.2.1
