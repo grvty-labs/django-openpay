@@ -1,7 +1,7 @@
 **django-openpay**
 ==================
 
-Important Notice
+Important Notice on 2017
 ----------------
 
 Save yourself and don't use Openpay. It is under your own risk to use Openpay, but this project has been deprecated for us (if you want to risk it and maintain this project, please let us know and we will transfer the project).
@@ -117,6 +117,11 @@ OPENPAY_BASICAUTH_USERS = {
   "username": "password"
 }
 ```
+
+Notice on 2022
+--------------
+
+We are passively searching for someone to maintain this project. If you would like to, please send an email this project's [email](mailto:django.openpay@foxm.xyz). This project left us with a bad taste, mainly related to the Openpay's documentation of 2017, since then we have been using Stripe for everything (with djstripe). That being said, we don't know how the Openpay's documentation has been improved, so maybe it is worth to take another look to this project.
 
 
 Testing
